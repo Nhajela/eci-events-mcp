@@ -16,6 +16,23 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_BUILD_COMMIT: commit(),
     NEXT_PUBLIC_BUILD_TIME: new Date().toISOString(),
   },
+  async headers() {
+    return [
+      {
+        // No page may be framed (clickjacking, especially on /connect).
+        source: "/:path*",
+        headers: [
+          { key: "X-Frame-Options", value: "DENY" },
+          { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+        ],
+      },
+      {
+        // The connect URL carries the sealed request; never leak it to linked sites.
+        source: "/connect",
+        headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
+      },
+    ];
+  },
   async rewrites() {
     // Next.js doesn't route dot-directories; rewrite the well-known paths
     // before the filesystem check (same approach as kx-tools).
