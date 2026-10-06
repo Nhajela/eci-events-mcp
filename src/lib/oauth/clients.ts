@@ -17,10 +17,22 @@ type Rejection = { ok: false; status: 400; body: { error: string; error_descript
 const LOOPBACK = new Set(["localhost", "127.0.0.1", "[::1]"]);
 const MAX_DOC = 65_536;
 const CACHE_MS = 10 * 60_000;
+const CACHE_MAX = 500;
+const MAX_URIS = 10;
+const MAX_URI_LEN = 2048;
 const cimdCache = new Map<string, { client: OAuthClient; at: number }>();
 
 export function _clearCimdCache(): void {
   cimdCache.clear();
+}
+
+function urisWellFormed(uris: unknown): uris is string[] {
+  return (
+    Array.isArray(uris) &&
+    uris.length > 0 &&
+    uris.length <= MAX_URIS &&
+    uris.every((u) => typeof u === "string" && u.length <= MAX_URI_LEN)
+  );
 }
 
 function isLoopback(uri: string): boolean {
@@ -70,13 +82,18 @@ export async function registerClient(
 ): Promise<{ ok: true; status: 201; body: Record<string, unknown> } | Rejection> {
   const b = (body ?? {}) as Record<string, unknown>;
   const uris = b.redirect_uris;
-  if (!Array.isArray(uris) || uris.length === 0 || uris.some((u) => typeof u !== "string")) {
-    return reject("invalid_redirect_uri", "redirect_uris must be a non-empty array of URLs");
+  if (!urisWellFormed(uris)) {
+    return reject(
+      "invalid_redirect_uri",
+      `redirect_uris must be 1 to ${MAX_URIS} URLs of at most ${MAX_URI_LEN} characters`,
+    );
   }
   const appType =
     b.application_type === "web" || b.application_type === "native" ? b.application_type : null;
-  const bad = (uris as string[]).find((u) => !validRedirect(u, appType));
-  if (bad) return reject("invalid_redirect_uri", `Redirect URI not allowed: ${bad}`);
+  const bad = uris.find((u) => !validRedirect(u, appType));
+  if (bad) {
+    return reject("invalid_redirect_uri", `Redirect URI not allowed: ${bad.slice(0, 200)}`);
+  }
   const name = typeof b.client_name === "string" ? b.client_name.slice(0, 100) : "MCP client";
   const clientId = await seal("client", { name, redirectUris: uris, applicationType: appType }, {});
   return {
@@ -95,8 +112,39 @@ export async function registerClient(
   };
 }
 
-function isPublicHost(hostname: string): boolean {
-  if (LOOPBACK.has(hostname) || hostname.endsWith(".local") || hostname.endsWith(".internal"))
+async function readCapped(res: Response): Promise<string | null> {
+  if (!res.body) return null;
+  const reader = res.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > MAX_DOC) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+  const all = new Uint8Array(total);
+  let off = 0;
+  for (const c of chunks) {
+    all.set(c, off);
+    off += c.byteLength;
+  }
+  return new TextDecoder().decode(all);
+}
+
+function isPublicHost(rawHostname: string): boolean {
+  const hostname = rawHostname.replace(/\.$/, "");
+  if (
+    LOOPBACK.has(hostname) ||
+    hostname === "localhost" ||
+    hostname.endsWith(".localhost") ||
+    hostname.endsWith(".local") ||
+    hostname.endsWith(".internal")
+  )
     return false;
   if (/^\d+\.\d+\.\d+\.\d+$/.test(hostname)) {
     const [a, b] = hostname.split(".").map(Number);
@@ -104,6 +152,9 @@ function isPublicHost(hostname: string): boolean {
       a === 10 ||
       a === 127 ||
       a === 0 ||
+      a >= 224 ||
+      (a === 100 && b >= 64 && b <= 127) ||
+      (a === 198 && (b === 18 || b === 19)) ||
       (a === 169 && b === 254) ||
       (a === 172 && b >= 16 && b <= 31) ||
       (a === 192 && b === 168)
@@ -120,7 +171,8 @@ async function fetchCimd(url: string): Promise<OAuthClient | null> {
   } catch {
     return null;
   }
-  if (u.protocol !== "https:" || u.hash || !isPublicHost(u.hostname)) return null;
+  if (u.protocol !== "https:" || u.hash || u.username || u.password || !isPublicHost(u.hostname))
+    return null;
   const hit = cimdCache.get(url);
   if (hit && Date.now() - hit.at < CACHE_MS) return hit.client;
   try {
@@ -131,25 +183,28 @@ async function fetchCimd(url: string): Promise<OAuthClient | null> {
     });
     if (!res.ok) return null;
     if (Number(res.headers.get("content-length") ?? 0) > MAX_DOC) return null;
-    const text = await res.text();
-    if (text.length > MAX_DOC) return null;
+    const text = await readCapped(res);
+    if (text === null) return null;
     const doc = JSON.parse(text) as Record<string, unknown>;
     if (doc.client_id !== url) return null;
     const uris = doc.redirect_uris;
-    if (!Array.isArray(uris) || uris.length === 0 || uris.some((x) => typeof x !== "string"))
-      return null;
+    if (!urisWellFormed(uris)) return null;
     const appType =
       doc.application_type === "web" || doc.application_type === "native"
         ? doc.application_type
         : null;
-    if ((uris as string[]).some((x) => !validRedirect(x, appType))) return null;
+    if (uris.some((x) => !validRedirect(x, appType))) return null;
     const client: OAuthClient = {
       clientId: url,
       kind: "cimd",
       name: typeof doc.client_name === "string" ? doc.client_name.slice(0, 100) : u.hostname,
-      redirectUris: uris as string[],
+      redirectUris: uris,
       applicationType: appType,
     };
+    if (cimdCache.size >= CACHE_MAX) {
+      const oldest = cimdCache.keys().next().value;
+      if (oldest !== undefined) cimdCache.delete(oldest);
+    }
     cimdCache.set(url, { client, at: Date.now() });
     return client;
   } catch {

@@ -63,6 +63,15 @@ describe("DCR", () => {
     expect(redirectAllowed(c as OAuthClient, "http://127.0.0.1:51000/other")).toBe(false);
   });
 
+  it("rejects more than 10 redirect URIs and trims echoed bad URIs", async () => {
+    const many = Array.from({ length: 11 }, (_, i) => `https://claude.ai/cb${i}`);
+    expect((await registerClient({ redirect_uris: many })).ok).toBe(false);
+    expect((await registerClient({ redirect_uris: many.slice(0, 10) })).ok).toBe(true);
+    const r = await registerClient({ redirect_uris: [`http://evil.example/${"a".repeat(1500)}`] });
+    const desc = (r as { body: { error_description: string } }).body.error_description;
+    expect(desc.length).toBeLessThan(260);
+  });
+
   it("returns null for a forged client id", async () => {
     expect(await resolveClient("not-sealed")).toBeNull();
   });
@@ -113,8 +122,113 @@ describe("CIMD", () => {
     expect(await resolveClient(URL_ID)).toBeNull();
   });
 
-  it("refuses private hosts", async () => {
+  it("refuses private hosts without fetching", async () => {
+    const f = vi.fn();
+    vi.stubGlobal("fetch", f);
     expect(await resolveClient("https://localhost/meta.json")).toBeNull();
     expect(await resolveClient("https://10.0.0.5/meta.json")).toBeNull();
+    expect(f).not.toHaveBeenCalled();
+  });
+
+  it("refuses trailing-dot, .localhost, CGNAT, benchmark, multicast and credentialed URLs without fetching", async () => {
+    const f = vi.fn();
+    vi.stubGlobal("fetch", f);
+    for (const u of [
+      "https://localhost./m.json",
+      "https://app.localhost/m.json",
+      "https://100.64.0.1/m.json",
+      "https://100.127.255.254/m.json",
+      "https://198.18.0.1/m.json",
+      "https://198.19.255.1/m.json",
+      "https://224.0.0.1/m.json",
+      "https://255.255.255.255/m.json",
+      "https://user:pw@client.example/m.json",
+      "https://user@client.example/m.json",
+    ]) {
+      expect(await resolveClient(u), u).toBeNull();
+    }
+    expect(f).not.toHaveBeenCalled();
+  });
+
+  it("refuses an http:// client_id without fetching", async () => {
+    const f = vi.fn();
+    vi.stubGlobal("fetch", f);
+    expect(await resolveClient("http://client.example/m.json")).toBeNull();
+    expect(f).not.toHaveBeenCalled();
+  });
+
+  it("refuses a non-2xx response", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response("{}", { status: 404 })),
+    );
+    expect(await resolveClient(URL_ID)).toBeNull();
+  });
+
+  it("fetches with redirect error and a timeout signal", async () => {
+    serve({ client_id: URL_ID, redirect_uris: ["https://client.example/cb"] });
+    await resolveClient(URL_ID);
+    const init = (fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0][1];
+    expect(init.redirect).toBe("error");
+    expect(init.signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it("stops reading and cancels a streamed body over the cap", async () => {
+    let cancelled = false;
+    const chunk = new Uint8Array(20_000).fill(120);
+    const body = new ReadableStream<Uint8Array>({
+      pull(c) {
+        c.enqueue(chunk);
+      },
+      cancel() {
+        cancelled = true;
+      },
+    });
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => new Response(body, { status: 200 })),
+    );
+    expect(await resolveClient(URL_ID)).toBeNull();
+    expect(cancelled).toBe(true);
+  });
+
+  it("refuses a content-length over the cap", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({ client_id: URL_ID, redirect_uris: ["https://client.example/cb"] }),
+            { status: 200, headers: { "content-length": "70000" } },
+          ),
+      ),
+    );
+    expect(await resolveClient(URL_ID)).toBeNull();
+  });
+
+  it("refuses more than 10 redirect URIs or an over-long URI", async () => {
+    const many = Array.from({ length: 11 }, (_, i) => `https://client.example/cb${i}`);
+    serve({ client_id: URL_ID, redirect_uris: many });
+    expect(await resolveClient(URL_ID)).toBeNull();
+    _clearCimdCache();
+    serve({ client_id: URL_ID, redirect_uris: [`https://client.example/${"a".repeat(2100)}`] });
+    expect(await resolveClient(URL_ID)).toBeNull();
+  });
+
+  it("evicts the oldest cache entry past 500", async () => {
+    const f = vi.fn(
+      async (url: string) =>
+        new Response(
+          JSON.stringify({ client_id: url, redirect_uris: ["https://client.example/cb"] }),
+          { status: 200 },
+        ),
+    );
+    vi.stubGlobal("fetch", f);
+    for (let i = 0; i < 501; i++) await resolveClient(`https://c${i}.example/m.json`);
+    expect(f).toHaveBeenCalledTimes(501);
+    await resolveClient("https://c500.example/m.json");
+    expect(f).toHaveBeenCalledTimes(501);
+    await resolveClient("https://c0.example/m.json");
+    expect(f).toHaveBeenCalledTimes(502);
   });
 });
