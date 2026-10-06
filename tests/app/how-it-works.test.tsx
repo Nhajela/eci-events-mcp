@@ -21,10 +21,10 @@ describe("/how-it-works", () => {
     const { default: Page } = await import("@/app/how-it-works/page");
     const html = renderToStaticMarkup(await Page());
     for (const t of ["New to this", "Curious", "Technical"]) expect(html).toContain(t);
-    expect(html).toContain(esc(SERVER_INSTRUCTIONS.split("\n")[0]));
+    expect(html).toContain(esc(SERVER_INSTRUCTIONS));
     expect(html).toContain(esc(STEERING));
     expect(html).toContain(esc(REVIEW_FAILED));
-    expect(html).toContain(esc(RUBRIC.split("\n")[0]));
+    expect(html).toContain(esc(RUBRIC));
     for (const p of PROMPTS) expect(html).toContain(esc(p.text));
     expect(html).toContain("edgeos_venue_availability");
     expect(html).toContain("2026-10-06-eci-events-mcp-design.md");
