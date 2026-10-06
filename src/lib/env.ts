@@ -13,12 +13,22 @@ export function mcpUrl(): string {
   return `${origin()}${MCP_PATH}`;
 }
 
+const DEFAULT_EDGEOS = "https://api.edgeos.world";
+const DEFAULT_PORTAL = "https://portal.edgecity.live";
+
+// Overrides are for local development and staging only. In production the
+// EdgeOS and portal hosts are fixed in code, so changing them needs a deploy.
+function override(name: "EDGEOS_API_BASE" | "EDGEOS_PORTAL_URL"): string | undefined {
+  if (process.env.NODE_ENV === "production") return undefined;
+  return process.env[name] || undefined;
+}
+
 export function edgeosBase(): string {
-  return `${trim(process.env.EDGEOS_API_BASE ?? "https://api.edgeos.world")}/api/v1`;
+  return `${trim(override("EDGEOS_API_BASE") ?? DEFAULT_EDGEOS)}/api/v1`;
 }
 
 export function portalUrl(): string {
-  return trim(process.env.EDGEOS_PORTAL_URL ?? "https://portal.edgecity.live");
+  return trim(override("EDGEOS_PORTAL_URL") ?? DEFAULT_PORTAL);
 }
 
 export function agenticAccessUrl(): string {

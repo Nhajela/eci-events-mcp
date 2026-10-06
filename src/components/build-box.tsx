@@ -25,6 +25,8 @@ export function BuildBox() {
         <dd>{b.host}</dd>
         <dt className="text-neutral-600">Deployed by</dt>
         <dd>{b.deployMethod}</dd>
+        <dt className="text-neutral-600">EdgeOS API</dt>
+        <dd className="font-mono break-all">{b.edgeosBase}</dd>
       </dl>
       <p className="mt-3 text-sm text-neutral-600">
         Live data:{" "}
