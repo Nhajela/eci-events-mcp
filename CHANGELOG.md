@@ -7,6 +7,7 @@ patch for fixes, minor for new tools or pages, major for changes that make atten
 ## [Unreleased]
 
 ### Added
+- Ops scripts (`pnpm secret:new` generates and hands over `TOKEN_SECRETS` without printing it; `pnpm smoke` checks a real key against EdgeOS), CI workflow, daily EdgeOS spec-drift workflow and README.
 - Landing guide, four-level trust page and key connect form showing where the attendee is sent back (`src/app/page.tsx`, `src/app/trust`, `src/app/connect`).
 - Shared web components (tabs, copy button, Mermaid, build box, cookie-free web analytics) and site fonts (`src/components`, `src/app/layout.tsx`).
 - Prompts (`whats_on_today`, `plan_my_week`, `host_an_event`) and opt-in pseudonymous PostHog MCP Analytics: no key, arguments or responses are sent (`src/mcp/prompts.ts`, `src/mcp/analytics.ts`).

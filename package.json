@@ -17,7 +17,7 @@
     "spec:gen": "tsx scripts/gen-reference.ts",
     "policy:check": "tsx scripts/policy-check.ts",
     "secret:new": "tsx scripts/set-token-secret.ts",
-    "smoke": "tsx scripts/smoke.ts"
+    "smoke": "tsx --env-file-if-exists=.env.local scripts/smoke.ts"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "^2.3.1",
