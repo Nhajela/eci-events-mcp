@@ -73,15 +73,54 @@ describe("edgeos client", () => {
     expect(err.detail).toBe("EdgeOS returned 502");
   });
 
-  it("maps network failures to status 0", async () => {
+  it("maps network failures to status 0 and scrubs the message", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn(async () => {
-        throw new TypeError("fetch failed");
+        throw new TypeError(`fetch failed for ${KEY}`);
       }),
     );
+    try {
+      const err = await fail(edgeos(KEY, "GET", "/x"));
+      expect(err.status).toBe(0);
+      expect(err.detail).not.toContain(KEY);
+      expect(err.message).not.toContain(KEY);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("throws EdgeosError for a non-JSON 2xx body", async () => {
+    mockEdgeos([{ method: "GET", path: "/x", status: 200, body: "<html>oops</html>" }]);
     const err = await fail(edgeos(KEY, "GET", "/x"));
-    expect(err.status).toBe(0);
-    vi.unstubAllGlobals();
+    expect(err).toBeInstanceOf(EdgeosError);
+    expect(err.detail).toBe("EdgeOS returned an unreadable response");
+  });
+
+  it("refuses redirects", async () => {
+    const m = mockEdgeos([{ method: "GET", path: "/x", body: {} }]);
+    await edgeos(KEY, "GET", "/x");
+    expect(m.fetchMock.mock.calls[0][1]?.redirect).toBe("error");
+  });
+
+  it("rejects unsafe paths", async () => {
+    mockEdgeos([]);
+    for (const p of ["x", "/a/../b", "/a?b=1", "/a#b"]) {
+      await expect(edgeos(KEY, "GET", p)).rejects.toThrow("bad EdgeOS path");
+    }
+  });
+
+  it("caps Retry-After at 300 seconds", async () => {
+    mockEdgeos([
+      {
+        method: "GET",
+        path: "/x",
+        status: 429,
+        body: { detail: "slow" },
+        headers: { "retry-after": "99999" },
+      },
+    ]);
+    const err = await fail(edgeos(KEY, "GET", "/x"));
+    expect(err.retryAfter).toBe(300);
   });
 });

@@ -13,4 +13,5 @@ patch for fixes, minor for new tools or pages, major for changes that make atten
 - Typed EdgeOS client with scrubbed errors, Retry-After parsing, and shared test mock (`src/lib/edgeos`, `tests/edgeos-mock.ts`).
 
 ### Fixed
+- EdgeOS client throws a typed error for unreadable 2xx bodies, refuses redirects, rejects unsafe paths, and caps Retry-After at 300 seconds.
 - IST time formatting now normalizes narrow non-breaking spaces (U+202F) to regular spaces in all output.

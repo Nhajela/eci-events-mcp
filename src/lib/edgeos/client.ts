@@ -32,6 +32,9 @@ export async function edgeos<T>(
   path: string,
   opts: { query?: Query; body?: unknown; timeoutMs?: number } = {},
 ): Promise<T> {
+  if (!path.startsWith("/") || path.includes("..") || path.includes("?") || path.includes("#")) {
+    throw new Error("bad EdgeOS path");
+  }
   const url = new URL(edgeosBase() + path);
   for (const [k, v] of Object.entries(opts.query ?? {})) {
     if (v === undefined || v === null) continue;
@@ -51,6 +54,7 @@ export async function edgeos<T>(
       body: hasBody ? JSON.stringify(opts.body) : undefined,
       signal: AbortSignal.timeout(opts.timeoutMs ?? 15_000),
       cache: "no-store",
+      redirect: "error",
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -62,8 +66,12 @@ export async function edgeos<T>(
     throw new EdgeosError(
       res.status,
       detailFrom(res.status, res.headers.get("content-type"), text),
-      Number.isFinite(ra) && ra > 0 ? ra : null,
+      Number.isFinite(ra) && ra > 0 ? Math.min(ra, 300) : null,
     );
   }
-  return (text ? JSON.parse(text) : null) as T;
+  try {
+    return (text ? JSON.parse(text) : null) as T;
+  } catch {
+    throw new EdgeosError(res.status, "EdgeOS returned an unreadable response", null);
+  }
 }
