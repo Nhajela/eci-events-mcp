@@ -1,0 +1,99 @@
+[
+  {
+    "method": "GET",
+    "path": "/api/v1/events/portal/events",
+    "exact": false,
+    "scopes": ["events:read"]
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/event-participants/portal/participants",
+    "exact": false,
+    "scopes": ["events:read"]
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/event-participants/portal/eligibility/",
+    "exact": false,
+    "scopes": ["events:read"]
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/event-venues/portal/venues",
+    "exact": false,
+    "scopes": ["events:read", "venues:read"]
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/event-settings/portal/settings",
+    "exact": false,
+    "scopes": ["events:read"]
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/tracks/portal/tracks",
+    "exact": false,
+    "scopes": ["events:read"]
+  },
+  {
+    "method": "GET",
+    "path": "/api/v1/popups/portal/list",
+    "exact": true,
+    "scopes": ["events:read"]
+  },
+  { "method": "GET", "path": "/api/v1/popups/portal/", "exact": false, "scopes": ["events:read"] },
+  {
+    "method": "POST",
+    "path": "/api/v1/events/portal/events",
+    "exact": true,
+    "scopes": ["events:write"]
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/events/portal/events/",
+    "exact": false,
+    "scopes": ["events:write"]
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/event-venues/portal/venues",
+    "exact": true,
+    "scopes": ["venues:write"]
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/event-participants/portal/register/",
+    "exact": false,
+    "scopes": ["rsvp:write"]
+  },
+  {
+    "method": "POST",
+    "path": "/api/v1/event-participants/portal/cancel-registration/",
+    "exact": false,
+    "scopes": ["rsvp:write"]
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/event-venues/portal/venues/",
+    "exact": false,
+    "scopes": ["venues:write"]
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/v1/events/portal/events/",
+    "exact": false,
+    "scopes": ["events:write"]
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/event-venues/portal/venues/",
+    "exact": false,
+    "scopes": ["venues:write"]
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/v1/events/portal/events/",
+    "exact": false,
+    "scopes": ["events:write"]
+  }
+]
