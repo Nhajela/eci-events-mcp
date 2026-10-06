@@ -12,6 +12,7 @@ patch for fixes, minor for new tools or pages, major for changes that make atten
 - Key scrubbing, pseudonymization, and IST time formatting helpers (`src/lib/scrub.ts`, `src/lib/time.ts`).
 - Typed EdgeOS client with scrubbed errors, Retry-After parsing, and shared test mock (`src/lib/edgeos`, `tests/edgeos-mock.ts`).
 - Popup and write-scope detection from a key using side-effect-free 403 vs 404 probes (`src/lib/edgeos/detect.ts`).
+- OAuth building blocks: PKCE S256 verification, authorization-server and protected-resource metadata, and stateless CIMD and DCR client resolution (`src/lib/oauth`).
 
 ### Fixed
 - EdgeOS client throws a typed error for unreadable 2xx bodies, refuses redirects, rejects unsafe paths, and caps Retry-After at 300 seconds.
