@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@modelcontextprotocol/client':
+        specifier: ^2.3.1
+        version: 2.3.1
       '@modelcontextprotocol/server':
         specifier: ^2.3.1
         version: 2.3.1
@@ -42,9 +45,6 @@ importers:
       '@biomejs/biome':
         specifier: ^2.5.15
         version: 2.5.15
-      '@modelcontextprotocol/client':
-        specifier: ^2.3.1
-        version: 2.3.1
       '@tailwindcss/postcss':
         specifier: ^4.3.3
         version: 4.3.3
