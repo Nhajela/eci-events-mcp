@@ -17,6 +17,7 @@ patch for fixes, minor for new tools or pages, major for changes that make atten
 - Stateless `/api/mcp` endpoint (SDK v2 `createMcpHandler`, sealed-token auth with 401 resource-metadata challenge, JSON legacy leg for 2025-11-25 clients), tool wrapper with scrubbed errors and key-free logs, server instructions, and `/api/build-info`.
 - Spec tooling: API-key route policy, `spec:sync`, `spec:gen` and `policy:check` scripts that filter the EdgeOS OpenAPI to key-reachable routes (`scripts/`, `spec/route-policy.json`).
 - Model-facing guides for schedule, recurring events, RSVPs, hosting, venues and limits (`guides/*.md`).
+- Filtered EdgeOS OpenAPI snapshot with generated route reference and guides modules (`spec/edgeos-openapi.json`, `src/generated`).
 
 ### Fixed
 - MCP endpoint: analytics stub so `next build` passes, real wrong-audience test, string-only scope check, and the legacy leg closes its per-request server.
