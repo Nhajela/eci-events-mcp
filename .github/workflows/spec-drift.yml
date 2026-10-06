@@ -1,0 +1,28 @@
+name: EdgeOS spec drift
+on:
+  schedule: [{ cron: "30 1 * * *" }] # 07:00 IST
+  workflow_dispatch:
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm spec:sync
+      - id: policy
+        run: pnpm policy:check
+        continue-on-error: true
+      - uses: peter-evans/create-pull-request@v7
+        with:
+          branch: chore/edgeos-spec-sync
+          title: "chore: EdgeOS spec changed upstream"
+          commit-message: "chore: sync EdgeOS spec snapshot"
+          body: |
+            The daily sync found changes in the EdgeOS OpenAPI spec${{ steps.policy.outcome == 'failure' && ' and the API-key route policy (update spec/route-policy.json; see the job log)' || '' }}.
+            Review the generated reference and guides before merging.
