@@ -214,12 +214,20 @@ export function Verify() {
       <h3 className="font-display text-lg font-semibold">What we measure</h3>
       <p>
         Analytics only runs when it is configured. Per tool call: tool name, success or error,
-        duration, which AI app, the AI's one-line reason for the call, and a hashed id that can't be
-        turned back into your key or name. PostHog also records requests the AI makes for features
-        we don't have. The reason and those requests are both short texts written by the AI. Never:
-        what you asked, event details, names, or your key. Hosting reviews send the proposed event's
-        text (not your key, not attendee lists) to a second AI model to check it against our
-        guidelines.
+        duration, which AI app, the AI's one-line reason for the call, the popup slug, your key's
+        scopes, a conversation id the AI passes back so calls in one chat group together, and a
+        hashed id that can't be turned back into your key or name. PostHog also records requests the
+        AI makes for features we don't have. The reason and those requests are both short texts
+        written by the AI. Never: what you asked, event details, error text, names, or your key.
+        Hosting reviews, only when enabled, send the proposed event's text (not your key, not
+        attendee lists) to a second AI model to check it against our guidelines.
+      </p>
+      <p>
+        <b>Web pages:</b> these pages send landing_viewed, trust_viewed, how_it_works_viewed,
+        connect_viewed, client_tab_selected (which app guide you opened), connect_started,
+        key_accepted (your key's scopes) and key_rejected (a short reason such as invalid_key). Page
+        URLs are sent with query strings and fragments stripped. No cookies (memory only), no
+        session recordings, no heatmaps, no autocapture.
       </p>
     </div>
   );

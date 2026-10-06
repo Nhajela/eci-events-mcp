@@ -24,7 +24,7 @@ export function ConnectForm({
       const t = setTimeout(() => window.location.assign(state.redirectTo), 2500);
       return () => clearTimeout(t);
     }
-    if (state.status === "error") track("key_rejected");
+    if (state.status === "error") track("key_rejected", { reason: state.code });
   }, [state]);
 
   if (state.status === "ok") {

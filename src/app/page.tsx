@@ -1,7 +1,7 @@
 import { Analytics } from "@/components/analytics";
 import { CopyButton } from "@/components/copy-button";
-import { Tabs } from "@/components/tabs";
 import { agenticAccessUrl, mcpUrl } from "@/lib/env";
+import { LandingTabs } from "./landing-tabs";
 
 function Step({ n, title, children }: { n: number; title: string; children: React.ReactNode }) {
   return (
@@ -87,7 +87,7 @@ export default async function Home() {
       <section className="mt-10">
         <h2 className="font-display text-2xl font-semibold">Connect in four steps</h2>
         <div className="mt-6">
-          <Tabs
+          <LandingTabs
             tabs={[
               {
                 id: "claude",

@@ -122,9 +122,16 @@ describe("authorization code flow", () => {
         "req",
       ) ?? "";
     const r = await completeAuthorize(req, "eos_live_NotARealKeyNotARealKey00");
-    expect(r).toMatchObject({ status: "error" });
+    expect(r).toMatchObject({ status: "error", code: "invalid_key" });
     expect((r as { message: string }).message).toContain("didn't accept");
-    expect(await completeAuthorize(req, "hello")).toMatchObject({ status: "error" });
+    expect(await completeAuthorize(req, "hello")).toMatchObject({
+      status: "error",
+      code: "not_a_key",
+    });
+    expect(await completeAuthorize("expired", "hello")).toMatchObject({
+      status: "error",
+      code: "expired_link",
+    });
   });
 
   it("exchanges the code once PKCE checks out, and refreshes", async () => {

@@ -28,6 +28,7 @@ patch for fixes, minor for new tools or pages, major for changes that make atten
 - Propose/confirm pipeline: `edgeos_propose` runs live checks and issues a 10-minute sealed proposal code; `edgeos_confirm` carries out exactly that action.
 
 ### Fixed
+- Web analytics strips query strings and fragments from URLs, turns off heatmaps, exception, performance and dead-click capture, reports `client_tab_selected` and a key-free `key_rejected` reason, and the trust page lists every web and tool-call field measured.
 - MCP analytics no longer sends `$exception` events, which carried tool error text (exception autocapture off and dropped in `beforeSend`).
 - EdgeOS and portal URL overrides are ignored in production, so the hosts can only change by deploying code; `/api/build-info` and the trust page show the EdgeOS API in use.
 - How-it-works catalog never sends analytics events, and the analytics and check descriptions match the code.

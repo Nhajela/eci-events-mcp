@@ -30,6 +30,21 @@ describe("pages", () => {
     expect(html).toContain("src/lib/seal.ts");
     expect(html).toContain("What is proven");
     expect(html).toContain("requests the AI makes for features we don");
+    expect(html).toContain("Web pages");
+    for (const e of [
+      "landing_viewed",
+      "trust_viewed",
+      "how_it_works_viewed",
+      "connect_viewed",
+      "client_tab_selected",
+      "connect_started",
+      "key_accepted",
+      "key_rejected",
+    ])
+      expect(html).toContain(e);
+    expect(html).toContain("popup slug");
+    expect(html).toContain("conversation id");
+    expect(html).toContain("only when enabled");
   });
 
   it("connect page explains an expired link", async () => {

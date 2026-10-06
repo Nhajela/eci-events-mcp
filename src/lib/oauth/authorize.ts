@@ -16,9 +16,18 @@ export type AuthRequest = {
   resource: string | null;
 };
 
+/** Short, key-free reason codes for a failed connect (used for analytics). */
+export type ConnectErrorCode =
+  | "not_a_key"
+  | "invalid_key"
+  | "no_events_read"
+  | "no_popup"
+  | "edgeos_down"
+  | "expired_link";
+
 export type ConnectState =
   | { status: "idle" }
-  | { status: "error"; message: string }
+  | { status: "error"; code: ConnectErrorCode; message: string }
   | { status: "ok"; redirectTo: string; scopes: Scope[]; popupName: string };
 
 type StartResult =
@@ -109,19 +118,25 @@ export async function completeAuthorize(reqToken: string, rawKey: string): Promi
   if (!req)
     return {
       status: "error",
+      code: "expired_link",
       message: "This sign-in link expired. Go back to your app and connect again.",
     };
   const key = rawKey.length > 200 ? "" : normalizeKey(rawKey);
   if (!looksLikeKey(key)) {
     return {
       status: "error",
+      code: "not_a_key",
       message:
         "That doesn't look like an EdgeOS key. Keys start with eos_live_. Copy the whole key from the portal.",
     };
   }
   const access = await detectAccess(key);
   if (!access.ok)
-    return { status: "error", message: `${REASONS[access.reason]} (${agenticAccessUrl()})` };
+    return {
+      status: "error",
+      code: access.reason,
+      message: `${REASONS[access.reason]} (${agenticAccessUrl()})`,
+    };
 
   const code = await seal(
     "code",

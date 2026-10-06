@@ -2,11 +2,9 @@
 
 import { useState } from "react";
 
-export function Tabs({
-  tabs,
-}: {
-  tabs: { id: string; label: string; content: React.ReactNode }[];
-}) {
+export type TabItem = { id: string; label: string; content: React.ReactNode };
+
+export function Tabs({ tabs, onChange }: { tabs: TabItem[]; onChange?: (id: string) => void }) {
   const [active, setActive] = useState(tabs[0].id);
   return (
     <div>
@@ -19,7 +17,10 @@ export function Tabs({
             type="button"
             aria-selected={active === t.id}
             aria-controls={`panel-${t.id}`}
-            onClick={() => setActive(t.id)}
+            onClick={() => {
+              if (t.id !== active) onChange?.(t.id);
+              setActive(t.id);
+            }}
             className={`-mb-px rounded-t-lg border px-4 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-teal-700 ${
               active === t.id
                 ? "border-neutral-200 border-b-white bg-white text-neutral-950"
