@@ -53,6 +53,31 @@ describe("pages", () => {
     expect(html).toContain("We never keep your key");
   });
 
+  it("landing offers two paths and keeps the goal in view", async () => {
+    const { default: Home } = await import("@/app/page");
+    const html = renderToStaticMarkup(await Home());
+    expect(html).toContain("I know MCP servers");
+    expect(html).toContain("I&#x27;m new to this, walk me through it");
+    // goal line appears in the hero and on every tutorial slide
+    const goals = html.split("can talk to Edge City&#x27;s events system").length - 1;
+    expect(goals).toBeGreaterThanOrEqual(8);
+    for (const t of [
+      "What you&#x27;ll get",
+      "Make your Edge City key",
+      "Open Customize → Connectors",
+      "Paste the name and link",
+      "Press Connect and paste your key",
+      "Turn it on in a chat",
+      "Try it",
+    ])
+      expect(html).toContain(t);
+    expect(html).toContain("Step 3 of 7");
+    expect(html).toContain("claude-add-custom-connector.png");
+    expect(html).toContain("Add custom MCP server");
+    expect(html).toContain("claude mcp add --transport http eci-events");
+    expect(html).toContain("/connect.md");
+  });
+
   it("trust page explains at four levels and links the key files", async () => {
     const { default: Trust } = await import("@/app/trust/page");
     const html = renderToStaticMarkup(await Trust());
@@ -68,6 +93,8 @@ describe("pages", () => {
       "how_it_works_viewed",
       "connect_viewed",
       "client_tab_selected",
+      "setup_path_selected",
+      "tutorial_step_viewed",
       "connect_started",
       "key_accepted",
       "key_rejected",

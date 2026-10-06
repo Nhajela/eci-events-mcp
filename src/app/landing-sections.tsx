@@ -1,3 +1,5 @@
+import { GoalLine } from "./setup/parts";
+
 // Landing page sections above the setup steps: who built this, what it is
 // for, what you can do with it, and what we track.
 
@@ -39,7 +41,7 @@ function Bubble({ from, children }: { from: "you" | "ai"; children: React.ReactN
   );
 }
 
-function ChatIllustration() {
+export function ChatIllustration() {
   return (
     <figure
       aria-label="Example chat: asking an AI what's on tonight and RSVPing"
@@ -83,11 +85,14 @@ export function Hero() {
           Ask about the village calendar in plain words. Find what's on, RSVP, plan your week and
           host your own events, from the AI app you already use.
         </p>
+        <div className="mt-5">
+          <GoalLine />
+        </div>
         <a
-          href="#connect"
+          href="#setup"
           className="mt-6 inline-block rounded-lg bg-teal-700 px-5 py-3 font-medium text-white hover:bg-teal-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
         >
-          Connect in 4 steps
+          Get set up
         </a>
       </div>
       <ChatIllustration />
