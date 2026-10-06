@@ -1,4 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/server";
+import { SITE_NAME } from "@/lib/site";
 import type { Access } from "@/lib/types";
 import { instrumentServer } from "./analytics";
 import { registerGuide } from "./guide";
@@ -18,7 +19,7 @@ export function buildServer(
   opts: { analytics?: "live" | "describe" } = {},
 ): McpServer {
   const server = new McpServer(
-    { name: "eci-events", version: "1.0.0" },
+    { name: "eci-events", title: SITE_NAME, version: "1.0.0" },
     { instructions: SERVER_INSTRUCTIONS },
   );
   instrumentServer(server, access, { send: opts.analytics !== "describe" }); // before registrations so every tool is wrapped

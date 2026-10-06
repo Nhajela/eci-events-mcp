@@ -1,4 +1,5 @@
 import { mcpUrl, origin } from "@/lib/env";
+import { SITE_NAME } from "@/lib/site";
 
 export function authServerMetadata(): Record<string, unknown> {
   const o = origin();
@@ -23,7 +24,7 @@ export function protectedResourceMetadata(): Record<string, unknown> {
     resource: mcpUrl(),
     authorization_servers: [o],
     bearer_methods_supported: ["header"],
-    resource_name: "ECI Events MCP",
+    resource_name: SITE_NAME,
     resource_documentation: `${o}/trust`,
   };
 }
