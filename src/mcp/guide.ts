@@ -51,8 +51,7 @@ export function registerGuide(server: McpServer, access: Access): void {
     "edgeos_guide",
     {
       title: "Guide",
-      description:
-        "Detailed guidance plus the EdgeOS field reference for one area: schedule, recurring, rsvp, hosting, venues, limits.",
+      description: `Detailed guidance plus the EdgeOS field reference for one area: ${Object.keys(GUIDES).join(", ")}.`,
       inputSchema: z.object({ topic: z.enum(topics).describe("Which area.") }),
       annotations: { readOnlyHint: true },
     },

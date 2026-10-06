@@ -59,7 +59,7 @@ export function eventsMarkdown(events: EdgeEvent[], venues: Map<string, string>)
 export function rangeText(r: TimeRange): string {
   const start = r.start ?? r.start_time;
   const end = r.end ?? r.end_time;
-  return start && end ? formatIstRange(start, end) : JSON.stringify(r);
+  return start && end ? formatIstRange(start, end) : "time unavailable";
 }
 
 export { formatIst };

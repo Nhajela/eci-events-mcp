@@ -27,3 +27,4 @@ patch for fixes, minor for new tools or pages, major for changes that make atten
 - OAuth CIMD fetch is stream-capped at 64 KB, the client cache and redirect URI lists are bounded, and the public-host check also refuses trailing-dot, `.localhost`, CGNAT, benchmark, multicast and credentialed URLs.
 - EdgeOS client throws a typed error for unreadable 2xx bodies, refuses redirects, rejects unsafe paths, and caps Retry-After at 300 seconds.
 - IST time formatting now normalizes narrow non-breaking spaces (U+202F) to regular spaces in all output.
+- Read tools: scope-gating and path-encoding tests, "(showing N of M)" notes on partial track and participant lists, participant output limited to safe fields, impossible dates rejected, guide topics built from the guides module.

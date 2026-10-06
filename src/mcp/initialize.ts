@@ -1,5 +1,6 @@
 import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
+import { GUIDES } from "@/generated/guides";
 import { agenticAccessUrl } from "@/lib/env";
 import { formatIst } from "@/lib/time";
 import { type Access, hasScope } from "@/lib/types";
@@ -12,7 +13,7 @@ export const RULES = `## Rules
 2. Times are India time (IST). Tools already convert; quote them as given.
 3. Every change goes through \`edgeos_propose\`, then \`edgeos_confirm\` only after an explicit yes to the summary.
 4. Never ask for the attendee's EdgeOS key in chat.
-5. For depth on any area, call \`edgeos_guide\` with a topic: schedule, recurring, rsvp, hosting, venues, limits.`;
+5. For depth on any area, call \`edgeos_guide\` with a topic: ${Object.keys(GUIDES).join(", ")}.`;
 
 export const NOT_AVAILABLE = `## Not available here
 EdgeOS doesn't let API keys reach these, so say so and point to the Edge City portal: messages to attendees, check-in and attendance, the attendee directory, anyone's profile, admin notes. EdgeOS has no recordings or transcripts.`;

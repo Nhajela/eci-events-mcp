@@ -19,7 +19,13 @@ import { withToolHandler } from "@/mcp/lib/tool-wrapper";
 import { eventRow, eventsMarkdown, rangeText } from "./format";
 
 const RO = { readOnlyHint: true, openWorldHint: true } as const;
-const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Use an India date as YYYY-MM-DD");
+const isoDate = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, "Use an India date as YYYY-MM-DD")
+  .refine((s) => {
+    const d = new Date(`${s}T00:00:00Z`);
+    return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === s;
+  }, "That date doesn't exist. Use an India date as YYYY-MM-DD");
 const uuid = z.string().min(1);
 
 export const readContextSection: ContextSection = (a) =>
@@ -35,6 +41,10 @@ export const readContextSection: ContextSection = (a) =>
 - \`edgeos_list_invitations\`: invitations on an event the attendee hosts.
 Times come back in IST already. Quote them as given.`
     : null;
+
+function partial(shown: number, total: number): string {
+  return shown < total ? ` (showing ${shown} of ${total})` : "";
+}
 
 async function venueNames(access: Access): Promise<Map<string, string>> {
   const v = await edgeos<ListModel<Venue>>(access.key, "GET", "/event-venues/portal/venues", {
@@ -194,6 +204,7 @@ export function registerReadTools(server: McpServer, access: Access, now: Date):
     },
     withToolHandler("edgeos_list_participants", access, async (p) => {
       const rows: Participant[] = [];
+      let total = 0;
       for (let skip = 0; skip < 5000; skip += 1000) {
         const page = await edgeos<ListModel<Participant>>(
           access.key,
@@ -209,16 +220,27 @@ export function registerReadTools(server: McpServer, access: Access, now: Date):
           },
         );
         rows.push(...page.results);
+        total = page.paging.total;
         if (skip + page.results.length >= page.paging.total || page.results.length === 0) break;
       }
       const going = rows.filter((r) => r.status !== "cancelled");
+      const shown = going.map(({ id, status, role, first_name, last_name, occurrence_start }) => ({
+        id,
+        status,
+        role,
+        first_name,
+        last_name,
+        occurrence_start,
+      }));
       const names = going.map(
         (r) =>
           `- ${[r.first_name, r.last_name].filter(Boolean).join(" ") || "(name hidden)"} · ${r.status}`,
       );
       return ok(
-        going.length ? `${going.length} going:\n${names.join("\n")}` : "Nobody listed yet.",
-        { participants: going },
+        going.length
+          ? `${going.length} going${partial(rows.length, total)}:\n${names.join("\n")}`
+          : "Nobody listed yet.",
+        { participants: shown },
       );
     }),
   );
@@ -311,7 +333,8 @@ export function registerReadTools(server: McpServer, access: Access, now: Date):
         ),
         venueNames(access),
       ]);
-      return ok(eventsMarkdown(r.results, venues), {
+      const note = partial(r.results.length, r.paging.total);
+      return ok(eventsMarkdown(r.results, venues) + (note ? `\n\n${note.trim()}` : ""), {
         events: r.results.map((e) => eventRow(e, venues)),
       });
     }),
