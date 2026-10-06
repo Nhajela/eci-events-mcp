@@ -1,12 +1,14 @@
-export const TZ = "Asia/Kolkata";
+﻿export const TZ = "Asia/Kolkata";
 const IST_OFFSET_MS = 330 * 60_000;
 const DAY_MS = 86_400_000;
 
 // Newer ICU puts U+202F before AM/PM; models and tests expect a plain space.
-const clean = (s: string) => s.replace(/ /g, " ");
+export function cleanSpaces(s: string): string {
+  return s.replace(/[ \u202F]/g, " ");
+}
 
 export function istDayLabelFromDate(d: Date): string {
-  return clean(
+  return cleanSpaces(
     d.toLocaleDateString("en-GB", {
       timeZone: TZ,
       weekday: "short",
@@ -17,7 +19,7 @@ export function istDayLabelFromDate(d: Date): string {
 }
 
 export function formatIstTime(iso: string): string {
-  return clean(
+  return cleanSpaces(
     new Date(iso).toLocaleTimeString("en-US", { timeZone: TZ, hour: "numeric", minute: "2-digit" }),
   );
 }

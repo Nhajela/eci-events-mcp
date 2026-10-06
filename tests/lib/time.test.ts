@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  cleanSpaces,
   formatIst,
   formatIstRange,
   hasOffset,
@@ -38,5 +39,13 @@ describe("IST time", () => {
     expect(hasOffset("2026-10-14T18:00:00+05:30")).toBe(true);
     expect(hasOffset("2026-10-14T12:30:00Z")).toBe(true);
     expect(hasOffset("2026-10-14T18:00:00")).toBe(false);
+  });
+  it("normalizes spaces in time strings", () => {
+    expect(cleanSpaces("8:30 PM")).toBe("8:30 PM");
+    expect(cleanSpaces("8:30 PM")).toBe("8:30 PM");
+  });
+  it("formatIst output contains no U+202F", () => {
+    const formatted = formatIst("2026-10-14T15:00:00Z");
+    expect(formatted).not.toContain(" ");
   });
 });
