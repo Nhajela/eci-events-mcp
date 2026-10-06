@@ -22,6 +22,27 @@ describe("pages", () => {
     expect(html).toContain("Never paste your key into a chat");
   });
 
+  it("landing leads with the community disclaimer, the value and use cases", async () => {
+    const { default: Home } = await import("@/app/page");
+    const html = renderToStaticMarkup(await Home());
+    const disclaimer = html.indexOf("Community-built, not an official Edge City app");
+    expect(disclaimer).toBeGreaterThan(-1);
+    expect(disclaimer).toBeLessThan(html.indexOf("<h1"));
+    expect(html).toContain("@HiiNaman");
+    expect(html).toContain("Use your own Claude or ChatGPT for Edge City events");
+    for (const t of [
+      "See what&#x27;s on",
+      "RSVP without the portal",
+      "Plan your week",
+      "Host an event",
+    ])
+      expect(html).toContain(t);
+    expect(html).toContain("Confirm?");
+    expect(html).toContain("What we track");
+    expect(html).toContain("how many people use this");
+    expect(html).toContain("We never keep your key");
+  });
+
   it("trust page explains at four levels and links the key files", async () => {
     const { default: Trust } = await import("@/app/trust/page");
     const html = renderToStaticMarkup(await Trust());

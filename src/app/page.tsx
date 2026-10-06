@@ -1,6 +1,7 @@
 import { Analytics } from "@/components/analytics";
 import { CopyButton } from "@/components/copy-button";
 import { agenticAccessUrl, mcpUrl } from "@/lib/env";
+import { CommunityDisclaimer, Hero, TrackingNote, UseCases } from "./landing-sections";
 import { LandingTabs } from "./landing-tabs";
 
 function Step({ n, title, children }: { n: number; title: string; children: React.ReactNode }) {
@@ -71,121 +72,124 @@ export default async function Home() {
     </Step>
   );
   return (
-    <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
-      <Analytics page="landing" />
-      <p className="text-sm font-medium uppercase tracking-wider text-teal-800">
-        Edge City India · 11 Oct – 1 Nov 2026 · Mandrem, Goa
-      </p>
-      <h1 className="mt-3 font-display text-4xl font-bold sm:text-5xl">
-        Ask your AI what's on at Edge City
-      </h1>
-      <p className="mt-4 text-lg text-neutral-700">
-        Connect Claude or ChatGPT to the village calendar. Find events, RSVP, and host your own, in
-        plain words. A community project, not run by Edge City.
-      </p>
+    <>
+      <CommunityDisclaimer />
+      <main className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
+        <Analytics page="landing" />
+        <Hero />
+        <UseCases />
 
-      <section className="mt-10">
-        <h2 className="font-display text-2xl font-semibold">Connect in four steps</h2>
-        <div className="mt-6">
-          <LandingTabs
-            tabs={[
-              {
-                id: "claude",
-                label: "claude.ai / Claude app",
-                content: (
-                  <ol className="space-y-8">
-                    <KeyStep />
-                    <Step n={2} title="Add the connector">
-                      <p>
-                        In Claude: <b>Settings → Connectors → Add custom connector</b>. Name it
-                        “Edge City events” and paste this URL:
-                      </p>
-                      <UrlBox url={url} />
-                      <p>
-                        Press <b>Add</b>, then <b>Connect</b>.
-                      </p>
-                    </Step>
-                    {pasteStep}
-                    <TryStep />
-                  </ol>
-                ),
-              },
-              {
-                id: "chatgpt",
-                label: "ChatGPT",
-                content: (
-                  <ol className="space-y-8">
-                    <KeyStep />
-                    <Step n={2} title="Add the connector">
-                      <p>
-                        In ChatGPT:{" "}
-                        <b>Settings → Apps &amp; Connectors → Advanced → Developer mode</b> on, then{" "}
-                        <b>Create</b>. Name it “Edge City events”, choose OAuth, and paste this URL:
-                      </p>
-                      <UrlBox url={url} />
-                      <p>
-                        Press <b>Create</b>. In a new chat, turn the connector on from the <b>+</b>{" "}
-                        menu.
-                      </p>
-                    </Step>
-                    {pasteStep}
-                    <TryStep />
-                  </ol>
-                ),
-              },
-              {
-                id: "other",
-                label: "Claude Code & others",
-                content: (
-                  <ol className="space-y-8">
-                    <KeyStep />
-                    <Step n={2} title="Add the server">
-                      <p>Claude Code:</p>
-                      <UrlBox url={`claude mcp add --transport http eci-events ${url}`} />
-                      <p>
-                        Any MCP client that supports remote servers with OAuth: add{" "}
-                        <code className="font-mono">{url}</code>. No token goes in the URL.
-                      </p>
-                    </Step>
-                    {pasteStep}
-                    <TryStep />
-                  </ol>
-                ),
-              },
-            ]}
-          />
+        <section id="connect" className="mt-14 max-w-3xl scroll-mt-6">
+          <h2 className="font-display text-2xl font-semibold">Connect in four steps</h2>
+          <div className="mt-6">
+            <LandingTabs
+              tabs={[
+                {
+                  id: "claude",
+                  label: "claude.ai / Claude app",
+                  content: (
+                    <ol className="space-y-8">
+                      <KeyStep />
+                      <Step n={2} title="Add the connector">
+                        <p>
+                          In Claude: <b>Settings → Connectors → Add custom connector</b>. Name it
+                          “Edge City events” and paste this URL:
+                        </p>
+                        <UrlBox url={url} />
+                        <p>
+                          Press <b>Add</b>, then <b>Connect</b>.
+                        </p>
+                      </Step>
+                      {pasteStep}
+                      <TryStep />
+                    </ol>
+                  ),
+                },
+                {
+                  id: "chatgpt",
+                  label: "ChatGPT",
+                  content: (
+                    <ol className="space-y-8">
+                      <KeyStep />
+                      <Step n={2} title="Add the connector">
+                        <p>
+                          In ChatGPT:{" "}
+                          <b>Settings → Apps &amp; Connectors → Advanced → Developer mode</b> on,
+                          then <b>Create</b>. Name it “Edge City events”, choose OAuth, and paste
+                          this URL:
+                        </p>
+                        <UrlBox url={url} />
+                        <p>
+                          Press <b>Create</b>. In a new chat, turn the connector on from the{" "}
+                          <b>+</b> menu.
+                        </p>
+                      </Step>
+                      {pasteStep}
+                      <TryStep />
+                    </ol>
+                  ),
+                },
+                {
+                  id: "other",
+                  label: "Claude Code & others",
+                  content: (
+                    <ol className="space-y-8">
+                      <KeyStep />
+                      <Step n={2} title="Add the server">
+                        <p>Claude Code:</p>
+                        <UrlBox url={`claude mcp add --transport http eci-events ${url}`} />
+                        <p>
+                          Any MCP client that supports remote servers with OAuth: add{" "}
+                          <code className="font-mono">{url}</code>. No token goes in the URL.
+                        </p>
+                      </Step>
+                      {pasteStep}
+                      <TryStep />
+                    </ol>
+                  ),
+                },
+              ]}
+            />
+          </div>
+        </section>
+
+        <section className="mt-14 grid max-w-3xl gap-6 sm:grid-cols-2">
+          <div className="rounded-xl border border-neutral-200 p-5">
+            <h2 className="font-display text-xl font-semibold">Why you can trust this</h2>
+            <p className="mt-2 text-neutral-700">
+              We never store your key. Your AI never sees it. It travels locked inside a token only
+              this server can open, and only for the moment it's needed.
+            </p>
+            <a className="mt-3 inline-block font-medium text-teal-800 underline" href="/trust">
+              How this works, in detail
+            </a>
+          </div>
+          <div className="rounded-xl border border-neutral-200 p-5">
+            <h2 className="font-display text-xl font-semibold">Where this runs</h2>
+            <p className="mt-2 text-neutral-700">
+              The code is public on GitHub, and the page shows exactly which version is live, so you
+              or your AI can check it.
+            </p>
+            <a
+              className="mt-3 inline-block font-medium text-teal-800 underline"
+              href="/trust#where"
+            >
+              See the running version
+            </a>
+          </div>
+        </section>
+
+        <div className="max-w-3xl">
+          <TrackingNote />
         </div>
-      </section>
 
-      <section className="mt-14 grid gap-6 sm:grid-cols-2">
-        <div className="rounded-xl border border-neutral-200 p-5">
-          <h2 className="font-display text-xl font-semibold">Why you can trust this</h2>
-          <p className="mt-2 text-neutral-700">
-            We never store your key. Your AI never sees it. It travels locked inside a token only
-            this server can open, and only for the moment it's needed.
-          </p>
-          <a className="mt-3 inline-block font-medium text-teal-800 underline" href="/trust">
-            How this works, in detail
+        <p className="mt-8 text-neutral-700">
+          Want to see exactly what your AI is told?{" "}
+          <a className="font-medium text-teal-800 underline" href="/how-it-works">
+            I don't know how this works
           </a>
-        </div>
-        <div className="rounded-xl border border-neutral-200 p-5">
-          <h2 className="font-display text-xl font-semibold">Where this runs</h2>
-          <p className="mt-2 text-neutral-700">
-            The code is public on GitHub, and the page shows exactly which version is live, so you
-            or your AI can check it.
-          </p>
-          <a className="mt-3 inline-block font-medium text-teal-800 underline" href="/trust#where">
-            See the running version
-          </a>
-        </div>
-      </section>
-
-      <p className="mt-8 text-neutral-700">
-        Want to see exactly what your AI is told?{" "}
-        <a className="font-medium text-teal-800 underline" href="/how-it-works">
-          I don't know how this works
-        </a>
-      </p>
-    </main>
+        </p>
+      </main>
+    </>
   );
 }

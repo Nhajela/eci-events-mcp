@@ -7,6 +7,7 @@ patch for fixes, minor for new tools or pages, major for changes that make atten
 ## [Unreleased]
 
 ### Added
+- Landing page: community-built disclaimer (by @HiiNaman), value-first hero with an example chat, four use-case cards, and a plain "What we track" note.
 - Trust page Verify tab diagram: public repo, running commit, this server, and you or your AI reading the key files.
 - "I don't know how this works" page showing every instruction, tool definition, prompt and guide the AI receives, at three levels of detail.
 - Ops scripts (`pnpm secret:new` generates and hands over `TOKEN_SECRETS` without printing it; `pnpm smoke` checks a real key against EdgeOS), CI workflow, daily EdgeOS spec-drift workflow and README.
