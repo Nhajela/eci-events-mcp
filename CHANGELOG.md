@@ -7,6 +7,7 @@ patch for fixes, minor for new tools or pages, major for changes that make atten
 ## [Unreleased]
 
 ### Added
+- Optional Gemini second-opinion reviewer for hosting and venue proposals, off unless `REVIEWER_MODEL` is set (`src/mcp/propose/reviewer.ts`).
 - Next.js app scaffold, environment helpers, design spec and implementation plan.
 - Sealed JWE artifacts (`src/lib/seal.ts`) with secret rotation, mandatory expiry, pinned algorithms and required access-token audience.
 - Key scrubbing, pseudonymization, and IST time formatting helpers (`src/lib/scrub.ts`, `src/lib/time.ts`).

@@ -5,6 +5,7 @@ import { registerInitialize } from "./initialize";
 import { SERVER_INSTRUCTIONS } from "./instructions";
 import type { ContextSection } from "./lib/context";
 import { proposeContextSection, registerProposeTools } from "./propose/register";
+import { reviewProposal } from "./propose/reviewer";
 import { readContextSection, registerReadTools } from "./tools/read";
 
 const SECTIONS: ContextSection[] = [readContextSection, proposeContextSection];
@@ -17,6 +18,6 @@ export function buildServer(access: Access, now: Date = new Date()): McpServer {
   registerInitialize(server, access, now, SECTIONS);
   registerGuide(server, access);
   registerReadTools(server, access, now);
-  registerProposeTools(server, access, now);
+  registerProposeTools(server, access, now, reviewProposal);
   return server;
 }
