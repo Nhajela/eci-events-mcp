@@ -13,6 +13,7 @@ patch for fixes, minor for new tools or pages, major for changes that make atten
 - Typed EdgeOS client with scrubbed errors, Retry-After parsing, and shared test mock (`src/lib/edgeos`, `tests/edgeos-mock.ts`).
 - Popup and write-scope detection from a key using side-effect-free 403 vs 404 probes (`src/lib/edgeos/detect.ts`).
 - OAuth building blocks: PKCE S256 verification, authorization-server and protected-resource metadata, and stateless CIMD and DCR client resolution (`src/lib/oauth`).
+- Stateless OAuth authorize, connect, token, register and metadata routes: sealed auth request, 60 s code, 1 h access and refresh-until-Nov-15 tokens, with the raw key never placed in a URL (`src/lib/oauth`, `src/app/oauth`, `src/app/connect/actions.ts`).
 
 ### Fixed
 - OAuth CIMD fetch is stream-capped at 64 KB, the client cache and redirect URI lists are bounded, and the public-host check also refuses trailing-dot, `.localhost`, CGNAT, benchmark, multicast and credentialed URLs.
