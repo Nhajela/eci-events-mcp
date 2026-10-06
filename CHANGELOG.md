@@ -28,6 +28,7 @@ patch for fixes, minor for new tools or pages, major for changes that make atten
 - Propose/confirm pipeline: `edgeos_propose` runs live checks and issues a 10-minute sealed proposal code; `edgeos_confirm` carries out exactly that action.
 
 ### Fixed
+- MCP analytics no longer sends `$exception` events, which carried tool error text (exception autocapture off and dropped in `beforeSend`).
 - EdgeOS and portal URL overrides are ignored in production, so the hosts can only change by deploying code; `/api/build-info` and the trust page show the EdgeOS API in use.
 - How-it-works catalog never sends analytics events, and the analytics and check descriptions match the code.
 - Ops: documented a working `pnpm -s secret:new --pipe` command (pnpm's banner corrupted piped secrets), CI runs with read-only permissions, `pnpm smoke --rsvp` validates its argument and always attempts the cancel.

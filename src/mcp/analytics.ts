@@ -30,9 +30,11 @@ function who(access: Access): string {
   return pseudonymId(access.key, process.env.POSTHOG_ID_SALT ?? "");
 }
 
-type Ev = { properties?: Record<string, unknown> } | null;
+type Ev = { event?: string; properties?: Record<string, unknown> } | null;
 
-export function analyticsBeforeSend<T extends Ev>(event: T): T {
+export function analyticsBeforeSend<T extends Ev>(event: T): T | null {
+  // Exception events carry the tool result text, which can echo arguments.
+  if (event?.event === "$exception") return null;
   if (!event?.properties) return event;
   // Tool error text can echo argument values, so it goes too.
   const {
@@ -66,6 +68,7 @@ export function instrumentServer(
     context: true,
     enableConversationId: true,
     reportMissing: true,
+    enableExceptionAutocapture: false,
     serverBuild: (process.env.NEXT_PUBLIC_BUILD_COMMIT ?? "unknown").slice(0, 40),
     identify: async () => ({ distinctId: who(access) }),
     eventProperties: async () => ({

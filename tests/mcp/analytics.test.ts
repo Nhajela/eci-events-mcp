@@ -88,3 +88,54 @@ describe("analytics is off without token and salt", () => {
     expect(instrument).toHaveBeenCalledTimes(1);
   });
 });
+
+describe("instrumented server never sends tool error text", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.doUnmock("posthog-node");
+    vi.resetModules();
+  });
+
+  it("sends no $exception event and no error text for a failing tool", async () => {
+    vi.resetModules();
+    vi.stubEnv("POSTHOG_PROJECT_TOKEN", "phc_test");
+    vi.stubEnv("POSTHOG_ID_SALT", "salt");
+    const sent: { event: string; properties?: Record<string, unknown> }[] = [];
+    vi.doMock("posthog-node", () => ({
+      PostHog: class {
+        capture(e: { event: string; properties?: Record<string, unknown> }) {
+          sent.push(e);
+        }
+        async flush() {}
+      },
+    }));
+    const { newSecret, accessToken } = await import("../helpers");
+    vi.stubEnv("TOKEN_SECRETS", newSecret());
+    vi.stubEnv("PUBLIC_ORIGIN", "https://mcp.test");
+    const { mockEdgeos } = await import("../edgeos-mock");
+    mockEdgeos([
+      {
+        method: "GET",
+        path: "/events/portal/events/zz-secret-id",
+        status: 404,
+        body: { detail: "Event zz-secret-id not found" },
+      },
+    ]);
+    const { connectClient } = await import("../mcp-client");
+    const client = await connectClient(await accessToken());
+    const r = await client.callTool({
+      name: "edgeos_get_event",
+      arguments: { event_id: "zz-secret-id", context: "checking an event" },
+    });
+    expect(r.isError).toBe(true);
+    await vi.waitFor(() => expect(sent.some((e) => e.event === "$mcp_tool_call")).toBe(true));
+    expect(sent.map((e) => e.event)).not.toContain("$exception");
+    expect(JSON.stringify(sent)).not.toContain("zz-secret-id");
+  });
+
+  it("drops any $exception event in beforeSend", () => {
+    expect(
+      analyticsBeforeSend({ event: "$exception", properties: { $exception_list: [] } }),
+    ).toBeNull();
+  });
+});
