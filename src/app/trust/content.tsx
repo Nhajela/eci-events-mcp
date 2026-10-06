@@ -195,6 +195,14 @@ export function Verify() {
           </li>
         ))}
       </ul>
+      <Mermaid
+        caption="You or your AI read the key files at the commit this server runs, then check it here and in /api/build-info."
+        chart={`flowchart LR
+  R[Public repo on GitHub] --> C[Commit ${b.commit.slice(0, 12)}]
+  C -->|built and deployed| S[This server]
+  S -->|shows its commit| Y[You or your AI]
+  Y -->|read the key files| C`}
+      />
       <p>Paste this into your AI:</p>
       <pre className="overflow-x-auto whitespace-pre-wrap rounded-lg bg-neutral-100 p-3 text-sm">
         {prompt}

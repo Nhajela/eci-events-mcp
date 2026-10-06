@@ -45,6 +45,7 @@ describe("pages", () => {
     expect(html).toContain("popup slug");
     expect(html).toContain("conversation id");
     expect(html).toContain("only when enabled");
+    expect(html).toContain("You or your AI read the key files at the commit this server runs");
   });
 
   it("connect page explains an expired link", async () => {
