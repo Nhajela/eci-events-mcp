@@ -18,6 +18,7 @@ patch for fixes, minor for new tools or pages, major for changes that make atten
 - Spec tooling: API-key route policy, `spec:sync`, `spec:gen` and `policy:check` scripts that filter the EdgeOS OpenAPI to key-reachable routes (`scripts/`, `spec/route-policy.json`).
 - Model-facing guides for schedule, recurring events, RSVPs, hosting, venues and limits (`guides/*.md`).
 - Filtered EdgeOS OpenAPI snapshot with generated route reference and guides modules (`spec/edgeos-openapi.json`, `src/generated`).
+- `edgeos_initialize` gateway, `edgeos_guide` and scope-gated read tools (events, participants, tracks, venues, eligibility) with IST output (`src/mcp`).
 
 ### Fixed
 - MCP endpoint: analytics stub so `next build` passes, real wrong-audience test, string-only scope check, and the legacy leg closes its per-request server.
