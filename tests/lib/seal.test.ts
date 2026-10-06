@@ -1,3 +1,4 @@
+import { base64url, EncryptJWT } from "jose";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { seal, unseal } from "@/lib/seal";
 import { useTestSecrets } from "../helpers";
@@ -7,30 +8,36 @@ const secrets = useTestSecrets();
 
 afterEach(() => vi.useRealTimers());
 
+const AUD = "https://mcp.test/api/mcp";
+
 describe("seal/unseal", () => {
   it("round-trips a payload", async () => {
-    const t = await seal("access", { key: "eos_live_abc" }, { ttlSeconds: 60 });
-    const out = await unseal<{ key: string }>("access", t);
+    const t = await seal("access", { key: "eos_live_abc" }, { ttlSeconds: 60, audience: AUD });
+    const out = await unseal<{ key: string }>("access", t, { audience: AUD });
     expect(out?.key).toBe("eos_live_abc");
   });
 
   it("produces ciphertext that does not contain the key", async () => {
-    const t = await seal("access", { key: "eos_live_SECRETSECRET" }, { ttlSeconds: 60 });
+    const t = await seal(
+      "access",
+      { key: "eos_live_SECRETSECRET" },
+      { ttlSeconds: 60, audience: AUD },
+    );
     expect(t).not.toContain("eos_live_");
     expect(Buffer.from(t.split(".")[0], "base64url").toString()).toContain('"alg":"dir"');
   });
 
   it("rejects a tampered token", async () => {
-    const t = await seal("access", { key: "k" }, { ttlSeconds: 60 });
+    const t = await seal("access", { key: "k" }, { ttlSeconds: 60, audience: AUD });
     const parts = t.split(".");
     const ct = parts[3];
     parts[3] = (ct[0] === "A" ? "B" : "A") + ct.slice(1);
-    expect(await unseal("access", parts.join("."))).toBeNull();
+    expect(await unseal("access", parts.join("."), { audience: AUD })).toBeNull();
   });
 
   it("rejects the wrong artifact type", async () => {
     const code = await seal("code", { key: "k" }, { ttlSeconds: 60 });
-    expect(await unseal("access", code)).toBeNull();
+    expect(await unseal("access", code, { audience: AUD })).toBeNull();
   });
 
   it("rejects expired artifacts", async () => {
@@ -48,29 +55,54 @@ describe("seal/unseal", () => {
   });
 
   it("checks the audience when asked", async () => {
-    const t = await seal(
-      "access",
-      { key: "k" },
-      { ttlSeconds: 60, audience: "https://mcp.test/api/mcp" },
-    );
-    expect(await unseal("access", t, { audience: "https://mcp.test/api/mcp" })).not.toBeNull();
+    const t = await seal("access", { key: "k" }, { ttlSeconds: 60, audience: AUD });
+    expect(await unseal("access", t, { audience: AUD })).not.toBeNull();
     expect(await unseal("access", t, { audience: "https://other/api/mcp" })).toBeNull();
   });
 
   it("opens with an older secret after rotation and stops after removal", async () => {
-    const t = await seal("access", { key: "k" }, { ttlSeconds: 60 });
+    const t = await seal("access", { key: "k" }, { ttlSeconds: 60, audience: AUD });
     process.env.TOKEN_SECRETS = `${secrets.secretB},${secrets.secretA}`;
-    expect(await unseal("access", t)).not.toBeNull();
+    expect(await unseal("access", t, { audience: AUD })).not.toBeNull();
     process.env.TOKEN_SECRETS = secrets.secretB;
-    expect(await unseal("access", t)).toBeNull();
+    expect(await unseal("access", t, { audience: AUD })).toBeNull();
   });
 
   it("returns null for garbage", async () => {
-    expect(await unseal("access", "not-a-token")).toBeNull();
+    expect(await unseal("access", "not-a-token", { audience: AUD })).toBeNull();
   });
 
   it("refuses secrets that are not 32 bytes", async () => {
     process.env.TOKEN_SECRETS = "c2hvcnQ";
     await expect(seal("access", {}, { ttlSeconds: 1 })).rejects.toThrow("32 bytes");
+  });
+
+  it("refuses to seal without an expiry, except for client", async () => {
+    await expect(seal("access", {}, {})).rejects.toThrow("expiresAt or ttlSeconds");
+    await expect(seal("code", {}, { ttlSeconds: 0 })).rejects.toThrow("expiresAt or ttlSeconds");
+    const c = await seal("client", { name: "x" }, {});
+    expect((await unseal<{ name: string }>("client", c))?.name).toBe("x");
+  });
+
+  it("rejects non-client tokens that carry no exp", async () => {
+    const key = base64url.decode(process.env.TOKEN_SECRETS as string);
+    const t = await new EncryptJWT({ typ: "access", key: "k" })
+      .setProtectedHeader({ alg: "dir", enc: "A256GCM" })
+      .setIssuedAt()
+      .setAudience(AUD)
+      .encrypt(key);
+    expect(await unseal("access", t, { audience: AUD })).toBeNull();
+  });
+
+  it("strips reserved claims from the payload before sealing", async () => {
+    const t = await seal("code", { key: "k", exp: 1, iat: 1, aud: "x" }, { ttlSeconds: 60 });
+    const out = await unseal<{ key: string }>("code", t);
+    expect(out?.key).toBe("k");
+    expect(out?.exp).toBeGreaterThan(Date.now() / 1000);
+  });
+
+  it("refuses to unseal an access token without an audience", async () => {
+    const t = await seal("access", { key: "k" }, { ttlSeconds: 60, audience: AUD });
+    expect(await unseal("access", t)).toBeNull();
   });
 });

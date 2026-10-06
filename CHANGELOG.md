@@ -8,4 +8,4 @@ patch for fixes, minor for new tools or pages, major for changes that make atten
 
 ### Added
 - Next.js app scaffold, environment helpers, design spec and implementation plan.
-- Sealed JWE artifacts (`src/lib/seal.ts`) with secret rotation.
+- Sealed JWE artifacts (`src/lib/seal.ts`) with secret rotation, mandatory expiry, pinned algorithms and required access-token audience.

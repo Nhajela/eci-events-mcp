@@ -8,6 +8,8 @@ import { base64url, EncryptJWT, jwtDecrypt } from "jose";
 
 export type ArtifactType = "client" | "authreq" | "code" | "access" | "refresh" | "proposal";
 
+const RESERVED = ["iat", "exp", "nbf", "aud", "iss", "jti"];
+
 type Keyed = { kid: string; key: Uint8Array };
 
 function keys(): Keyed[] {
@@ -31,11 +33,20 @@ export async function seal(
   opts: { ttlSeconds?: number; expiresAt?: Date; audience?: string },
 ): Promise<string> {
   const [current] = keys();
-  let jwt = new EncryptJWT({ ...payload, typ })
+  const hasExpiry =
+    (opts.expiresAt instanceof Date && !Number.isNaN(opts.expiresAt.getTime())) ||
+    (typeof opts.ttlSeconds === "number" && opts.ttlSeconds > 0);
+  // Only the DCR client_id may live until the secret is rotated.
+  if (!hasExpiry && typ !== "client")
+    throw new Error(`seal(${typ}) needs expiresAt or ttlSeconds > 0`);
+  const claims = { ...payload };
+  for (const reserved of RESERVED) delete claims[reserved];
+  let jwt = new EncryptJWT({ ...claims, typ })
     .setProtectedHeader({ alg: "dir", enc: "A256GCM", kid: current.kid })
     .setIssuedAt();
   if (opts.expiresAt) jwt = jwt.setExpirationTime(Math.floor(opts.expiresAt.getTime() / 1000));
-  else if (opts.ttlSeconds) jwt = jwt.setExpirationTime(`${opts.ttlSeconds}s`);
+  else if (opts.ttlSeconds && opts.ttlSeconds > 0)
+    jwt = jwt.setExpirationTime(`${opts.ttlSeconds}s`);
   if (opts.audience) jwt = jwt.setAudience(opts.audience);
   return jwt.encrypt(current.key);
 }
@@ -46,6 +57,8 @@ export async function unseal<T>(
   opts: { audience?: string } = {},
 ): Promise<(T & { iat: number; exp?: number }) | null> {
   const known = keys();
+  // Access tokens are only valid for this server's MCP URL; never check one without it.
+  if (typ === "access" && !opts.audience) return null;
   try {
     const { payload } = await jwtDecrypt(
       token,
@@ -54,7 +67,13 @@ export async function unseal<T>(
         if (!match) throw new Error("unknown kid");
         return match.key;
       },
-      { audience: opts.audience, clockTolerance: 5 },
+      {
+        audience: opts.audience,
+        clockTolerance: 5,
+        keyManagementAlgorithms: ["dir"],
+        contentEncryptionAlgorithms: ["A256GCM"],
+        requiredClaims: typ === "client" ? [] : ["exp"],
+      },
     );
     if (payload.typ !== typ) return null;
     return payload as T & { iat: number; exp?: number };
