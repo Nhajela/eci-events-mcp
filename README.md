@@ -2,7 +2,9 @@
 
 Use the Edge City India 2026 events calendar (EdgeOS) from claude.ai, ChatGPT, Claude Code and other MCP clients: find events, RSVP, host events and manage venues with your own EdgeOS key.
 
-Community project, not run by Edge City.
+Community project by [@HiiNaman](https://t.me/HiiNaman), not run by Edge City.
+
+**Live:** https://eci-events.positivesumcompany.com · MCP URL: `https://eci-events.positivesumcompany.com/api/mcp`
 
 - **Connect:** add `<PUBLIC_ORIGIN>/api/mcp` as a custom connector (your deployed site URL + `/api/mcp`). No token in the URL; you paste your EdgeOS key once on our connect page.
 - **Safety:** your key is never stored. See `/trust` on the live site and `docs/superpowers/specs/2026-10-06-eci-events-mcp-design.md`.
