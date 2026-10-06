@@ -77,7 +77,11 @@ export function registerProposeTools(
           const issues = parsed.error.issues
             .map((i) => `${i.path.join(".") || "params"}: ${i.message}`)
             .join("; ");
-          throw new ToolError("BAD_PARAMS", `${issues}. See edgeos_guide topic "${def.guide}".`);
+          const accepted = Object.keys(def.schema.shape).join(", ");
+          throw new ToolError(
+            "BAD_PARAMS",
+            `${issues}. Accepted fields: ${accepted}. See edgeos_guide topic "${def.guide}".`,
+          );
         }
         const clean = parsed.data as Record<string, unknown>;
         const checks = await runChecks(action, clean, { access, now });

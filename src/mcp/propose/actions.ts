@@ -64,6 +64,7 @@ export type ActionDef = {
   title: string;
   guide: GuideTopic;
   reviewed: boolean;
+  /** Strict: unknown fields are refused, never silently dropped. */
   schema: z.ZodObject;
   // biome-ignore lint/suspicious/noExplicitAny: params are validated by `schema` before execute runs
   execute(access: Access, params: any): Promise<{ text: string; data: unknown }>;
@@ -75,7 +76,7 @@ export const ACTIONS: Record<ActionName, ActionDef> = {
     title: "RSVP",
     guide: "rsvp",
     reviewed: false,
-    schema: z.object({
+    schema: z.strictObject({
       event_id: id,
       occurrence_start: z.string().optional(),
       message: z.string().max(500).optional(),
@@ -95,7 +96,7 @@ export const ACTIONS: Record<ActionName, ActionDef> = {
     title: "Cancel RSVP",
     guide: "rsvp",
     reviewed: false,
-    schema: z.object({ event_id: id, occurrence_start: z.string().optional() }),
+    schema: z.strictObject({ event_id: id, occurrence_start: z.string().optional() }),
     async execute(a, p) {
       const data = await edgeos(
         a.key,
@@ -111,7 +112,7 @@ export const ACTIONS: Record<ActionName, ActionDef> = {
     title: "Host a new event",
     guide: "hosting",
     reviewed: true,
-    schema: z.object(eventFields),
+    schema: z.strictObject(eventFields),
     async execute(a, p) {
       const e = await edgeos<EdgeEvent>(a.key, "POST", "/events/portal/events", {
         body: { ...strip(p), popup_id: a.popup.id, timezone: "Asia/Kolkata" },
@@ -124,7 +125,7 @@ export const ACTIONS: Record<ActionName, ActionDef> = {
     title: "Change an event",
     guide: "hosting",
     reviewed: true,
-    schema: z.object({
+    schema: z.strictObject({
       event_id: id,
       ...Object.fromEntries(Object.entries(eventFields).map(([k, v]) => [k, v.optional()])),
     }),
@@ -144,7 +145,7 @@ export const ACTIONS: Record<ActionName, ActionDef> = {
     title: "Cancel an event",
     guide: "hosting",
     reviewed: false,
-    schema: z.object({ event_id: id }),
+    schema: z.strictObject({ event_id: id }),
     async execute(a, p) {
       const data = await edgeos(
         a.key,
@@ -159,7 +160,7 @@ export const ACTIONS: Record<ActionName, ActionDef> = {
     title: "Hide an event",
     guide: "hosting",
     reviewed: false,
-    schema: z.object({ event_id: id }),
+    schema: z.strictObject({ event_id: id }),
     async execute(a, p) {
       const data = await edgeos(
         a.key,
@@ -174,7 +175,7 @@ export const ACTIONS: Record<ActionName, ActionDef> = {
     title: "Unhide an event",
     guide: "hosting",
     reviewed: false,
-    schema: z.object({ event_id: id }),
+    schema: z.strictObject({ event_id: id }),
     async execute(a, p) {
       const data = await edgeos(
         a.key,
@@ -189,7 +190,7 @@ export const ACTIONS: Record<ActionName, ActionDef> = {
     title: "Invite people",
     guide: "hosting",
     reviewed: false,
-    schema: z.object({ event_id: id, emails: z.array(z.string().email()).min(1).max(100) }),
+    schema: z.strictObject({ event_id: id, emails: z.array(z.string().email()).min(1).max(100) }),
     async execute(a, p) {
       const data = await edgeos(
         a.key,
@@ -205,7 +206,7 @@ export const ACTIONS: Record<ActionName, ActionDef> = {
     title: "Remove an invitation",
     guide: "hosting",
     reviewed: false,
-    schema: z.object({ event_id: id, invitation_id: id }),
+    schema: z.strictObject({ event_id: id, invitation_id: id }),
     async execute(a, p) {
       const data = await edgeos(
         a.key,
@@ -220,7 +221,7 @@ export const ACTIONS: Record<ActionName, ActionDef> = {
     title: "Add a venue",
     guide: "venues",
     reviewed: true,
-    schema: z.object(venueFields),
+    schema: z.strictObject(venueFields),
     async execute(a, p) {
       const v = await edgeos<Venue>(a.key, "POST", "/event-venues/portal/venues", {
         body: { ...strip(p), popup_id: a.popup.id },
@@ -233,7 +234,7 @@ export const ACTIONS: Record<ActionName, ActionDef> = {
     title: "Change a venue",
     guide: "venues",
     reviewed: true,
-    schema: z.object({
+    schema: z.strictObject({
       venue_id: id,
       ...Object.fromEntries(Object.entries(venueFields).map(([k, v]) => [k, v.optional()])),
     }),
@@ -253,7 +254,7 @@ export const ACTIONS: Record<ActionName, ActionDef> = {
     title: "Delete a venue",
     guide: "venues",
     reviewed: false,
-    schema: z.object({ venue_id: id }),
+    schema: z.strictObject({ venue_id: id }),
     async execute(a, p) {
       const data = await edgeos(
         a.key,

@@ -126,6 +126,30 @@ describe("propose → confirm", () => {
     expect(text(r)).toContain("venues:write");
   });
 
+  it("refuses unknown fields and names the accepted ones", async () => {
+    const m = mockEdgeos(routes);
+    const client = await connectClient(await accessToken({ scopes: [...FULL] }));
+    const r = await client.callTool({
+      name: "edgeos_propose",
+      arguments: {
+        action: "create_event",
+        params: {
+          title: "Morning Swim",
+          start_time: "2026-10-15T07:00:00+05:30",
+          end_time: "2026-10-15T08:00:00+05:30",
+          recurrence: { freq: "daily" },
+        },
+      },
+    });
+    expect(r.isError).toBe(true);
+    const t = text(r);
+    expect(t).toContain("BAD_PARAMS");
+    expect(t).toContain("recurrence");
+    expect(t).toMatch(/Accepted fields: title, start_time, end_time, content/);
+    expect(t).not.toContain("Proposal code");
+    expect(m.calls.some((c) => c.method === "POST")).toBe(false);
+  });
+
   it("explains invalid params", async () => {
     mockEdgeos(routes);
     const client = await connectClient(await accessToken());
