@@ -213,4 +213,61 @@ describe("hosting checks", () => {
     const r = await runChecks("cancel_event", { event_id: "e1" }, ctx);
     expect(r.warnings.join(" ")).toContain("3 people");
   });
+
+  const past = {
+    ...base,
+    start_time: "2026-10-13T09:00:00Z",
+    end_time: "2026-10-13T10:00:00Z",
+    rrule: "FREQ=DAILY",
+  };
+  const evRoutes = (body: unknown) => [
+    { method: "GET", path: "/events/portal/events/e1", body },
+    { method: "GET", path: "/event-venues/portal/venues", body: venues },
+  ];
+
+  it("lets a title-only update through on a recurring event already under way", async () => {
+    mockEdgeos(evRoutes(past));
+    const r = await runChecks("update_event", { event_id: "e1", title: "Breathwork II" }, ctx);
+    expect(r.blockers).toEqual([]);
+  });
+
+  it("lists every changed field in an update summary", async () => {
+    mockEdgeos(evRoutes(base));
+    const r = await runChecks("update_event", { event_id: "e1", visibility: "private" }, ctx);
+    expect(r.summary).toContain("visibility: private");
+    expect(r.summary).not.toContain("event_id");
+  });
+
+  it("truncates long values in the changes line", async () => {
+    mockEdgeos(evRoutes(base));
+    const r = await runChecks("update_event", { event_id: "e1", content: "x".repeat(200) }, ctx);
+    expect(r.summary).toContain(`${"x".repeat(80)}${String.fromCharCode(0x2026)}`);
+  });
+
+  it("lists emails for an invite and caps at 20", async () => {
+    mockEdgeos(evRoutes(base));
+    const emails = Array.from({ length: 25 }, (_, i) => `p${i}@x.in`);
+    const r = await runChecks("invite", { event_id: "e1", emails }, ctx);
+    expect(r.summary).toContain("p0@x.in");
+    expect(r.summary).toContain("and 5 more");
+    expect(r.summary).not.toContain("p24@x.in");
+    expect(r.warnings.join(" ")).toContain("25 invitations");
+  });
+
+  it("summarises removing an invitation", async () => {
+    mockEdgeos(evRoutes(base));
+    const r = await runChecks("remove_invitation", { event_id: "e1", invitation_id: "i1" }, ctx);
+    expect(r.blockers).toEqual([]);
+    expect(r.summary).toContain("Remove an invitation from");
+  });
+
+  it("rejects an impossible date", () => {
+    const parsed = ACTIONS.create_event.schema.safeParse({
+      title: "Jam",
+      start_time: "2026-13-45T25:99+05:30",
+      end_time: "2026-10-14T19:00:00+05:30",
+    });
+    expect(parsed.success).toBe(false);
+    expect(JSON.stringify(parsed.error?.issues)).toContain("Not a real date");
+  });
 });

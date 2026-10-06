@@ -14,6 +14,19 @@ export type CheckResult = {
 };
 
 type P = Record<string, unknown>;
+
+const ELLIPSIS = String.fromCharCode(0x2026);
+const clip = (v: string) => (v.length > 80 ? `${v.slice(0, 80)}${ELLIPSIS}` : v);
+const show = (v: unknown): string =>
+  typeof v === "string" ? clip(v) : Array.isArray(v) ? clip(v.join(", ")) : clip(JSON.stringify(v));
+
+/** "Changes: field: value; ..." for every param not in `skip`. */
+function changesLine(p: P, skip: string[]): string {
+  const parts = Object.entries(p)
+    .filter(([k, v]) => !skip.includes(k) && v !== undefined)
+    .map(([k, v]) => `${k}: ${show(v)}`);
+  return parts.length ? ` Changes: ${parts.join("; ")}.` : "";
+}
 const s = (v: unknown) => (typeof v === "string" ? v : undefined);
 
 async function venueMap(a: Access): Promise<Map<string, string>> {
@@ -90,7 +103,8 @@ async function rsvpChecks(
       );
     if (e.require_approval)
       warnings.push("The host approves each RSVP, so this is a request until they accept.");
-    const day = istDayWindow(istDate(new Date(e.start_time)), 1);
+    const prevDay = istDate(new Date(new Date(e.start_time).getTime() - 24 * 60 * 60 * 1000));
+    const day = istDayWindow(prevDay, 2);
     const mine = await edgeos<ListModel<EdgeEvent>>(access.key, "GET", "/events/portal/events", {
       query: {
         popup_id: access.popup.id,
@@ -136,7 +150,8 @@ function timeChecks(
     warnings.push(
       `It starts at ${formatIstTime(start)} IST. If the attendee meant a daytime time, the offset may be wrong (UTC read as IST).`,
     );
-  const { startDate, endDate } = access.popup;
+  const startDate = access.popup.startDate?.slice(0, 10);
+  const endDate = access.popup.endDate?.slice(0, 10);
   if (startDate && endDate) {
     const d = istDate(s0);
     if (d < startDate || d > endDate)
@@ -167,7 +182,8 @@ async function hostingChecks(
     start_time: string;
     end_time: string;
   };
-  timeChecks(merged.start_time, merged.end_time, ctx, blockers, warnings);
+  const timeGiven = "start_time" in p || "end_time" in p;
+  if (timeGiven) timeChecks(merged.start_time, merged.end_time, ctx, blockers, warnings);
   if (!s(merged.content))
     warnings.push(
       "There's no description. A few sentences on what happens and who it's for helps people decide.",
@@ -177,7 +193,7 @@ async function hostingChecks(
     warnings.push(
       "There's no venue or location. Pick a venue from edgeos_list_venues or set custom_location_name.",
     );
-  if (s(merged.venue_id)) {
+  if (s(merged.venue_id) && ("venue_id" in p || timeGiven)) {
     const r = await edgeos<{ available?: boolean; conflicts?: { title?: string }[] }>(
       ctx.access.key,
       "POST",
@@ -202,7 +218,11 @@ async function hostingChecks(
     }
   }
   const verb = action === "create_event" ? "Create" : "Update";
-  const summary = `${verb} “${merged.title}”, ${formatIstRange(merged.start_time, merged.end_time)}${where ? `, at ${where}` : ""}.`;
+  const extra =
+    action === "create_event"
+      ? changesLine(p, ["title", "start_time", "end_time", "venue_id", "custom_location_name"])
+      : changesLine(p, ["event_id"]);
+  const summary = `${verb} “${merged.title}”, ${formatIstRange(merged.start_time, merged.end_time)}${where ? `, at ${where}` : ""}.${extra}`;
   return { blockers, warnings, summary, event: current ?? undefined };
 }
 
@@ -216,7 +236,7 @@ export async function runChecks(action: ActionName, p: P, ctx: CheckContext): Pr
     return {
       blockers,
       warnings,
-      summary: `${action === "create_venue" ? "Add" : "Update"} the venue “${String(p.title ?? p.venue_id)}”.`,
+      summary: `${action === "create_venue" ? "Add" : "Update"} the venue “${String(p.title ?? p.venue_id)}”.${changesLine(p, ["venue_id"])}`,
     };
   }
   if (action === "delete_venue") {
@@ -261,8 +281,16 @@ export async function runChecks(action: ActionName, p: P, ctx: CheckContext): Pr
     cancel_event: "Cancel",
     hide_event: "Hide",
     unhide_event: "Unhide",
-    invite: `Invite ${emails.length} people to`,
+    invite: `Invite ${emails.length} ${emails.length === 1 ? "person" : "people"} to`,
     remove_invitation: "Remove an invitation from",
   };
-  return { blockers, warnings, summary: `${verbs[action]} “${e.title}”, ${when}.`, event: e };
+  const shown = emails.slice(0, 20).join(", ");
+  const more = emails.length > 20 ? ` and ${emails.length - 20} more` : "";
+  const tail = action === "invite" ? ` Emails: ${shown}${more}.` : "";
+  return {
+    blockers,
+    warnings,
+    summary: `${verbs[action]} “${e.title}”, ${when}.${tail}`,
+    event: e,
+  };
 }

@@ -22,6 +22,7 @@ patch for fixes, minor for new tools or pages, major for changes that make atten
 - Propose/confirm pipeline: `edgeos_propose` runs live checks and issues a 10-minute sealed proposal code; `edgeos_confirm` carries out exactly that action.
 
 ### Fixed
+- Propose/confirm: summaries show every sealed param, title-only updates to recurring or running events are no longer blocked, proposals bind to a hash of the whole key, impossible dates are rejected, and the overlap window covers the previous day.
 - MCP endpoint: analytics stub so `next build` passes, real wrong-audience test, string-only scope check, and the legacy leg closes its per-request server.
 - MCP endpoint: analytics stub so `next build` passes, real wrong-audience test, string-only scope check, and the legacy leg closes its per-request server.
 - OAuth token endpoint requires `client_id` and `grant_type`, tolerates null or non-object JSON bodies, returns JSON on server errors, and omits refresh tokens past the cutoff; authorize caps key, state and challenge input and redirects against the configured origin; metadata routes answer CORS preflight.

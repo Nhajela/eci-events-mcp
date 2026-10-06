@@ -1,7 +1,7 @@
+import { createHash } from "node:crypto";
 import type { McpServer } from "@modelcontextprotocol/server";
 import { z } from "zod";
 import { GUIDES } from "@/generated/guides";
-import { keyPrefix } from "@/lib/scrub";
 import { seal, unseal } from "@/lib/seal";
 import { type Access, hasScope, WRITE_SCOPES } from "@/lib/types";
 import type { ContextSection } from "@/mcp/lib/context";
@@ -19,7 +19,7 @@ export type Reviewer = (
 type ProposalPayload = {
   action: ActionName;
   params: Record<string, unknown>;
-  kp: string;
+  kh: string;
   summary: string;
 };
 
@@ -36,8 +36,10 @@ Every change is two steps:
 Times you send must carry an offset, e.g. 2026-10-14T18:30:00+05:30.`;
 };
 
+const keyHash = (key: string) => createHash("sha256").update(key).digest("hex").slice(0, 32);
+
 export const STEERING =
-  "Show the attendee the summary above, word for word, and raise each warning. Call `edgeos_confirm` only after they explicitly say yes. If they change anything, call `edgeos_propose` again with the new details.";
+  "Show the attendee the summary above, word for word, and raise each warning. Call `edgeos_confirm` only after they explicitly say yes. If they change anything, call `edgeos_propose` again with the new details. Call edgeos_confirm once per proposal; a repeated confirm repeats the change.";
 
 export function registerProposeTools(
   server: McpServer,
@@ -90,7 +92,7 @@ export function registerProposeTools(
           {
             action,
             params: clean,
-            kp: keyPrefix(access.key),
+            kh: keyHash(access.key),
             summary: checks.summary,
           } satisfies ProposalPayload,
           { ttlSeconds: 600 },
@@ -111,6 +113,7 @@ export function registerProposeTools(
         return ok(parts.join("\n\n"), {
           blocked: false,
           summary: checks.summary,
+          params: clean,
           warnings: checks.warnings,
           review: notes ?? [],
           code,
@@ -135,7 +138,7 @@ export function registerProposeTools(
           "PROPOSAL_EXPIRED",
           "That proposal code is invalid or expired (10 minutes). Propose again.",
         );
-      if (p.kp !== keyPrefix(access.key))
+      if (p.kh !== keyHash(access.key))
         throw new ToolError("WRONG_ATTENDEE", "That proposal was made for another attendee.");
       const def = ACTIONS[p.action];
       if (!hasScope(access, def.scope))

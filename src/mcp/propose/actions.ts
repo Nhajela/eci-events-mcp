@@ -3,7 +3,6 @@ import type { GuideTopic } from "@/generated/guides";
 import { ENUMS } from "@/generated/reference";
 import { edgeos } from "@/lib/edgeos/client";
 import type { EdgeEvent, Venue } from "@/lib/edgeos/types";
-import { formatIstRange } from "@/lib/time";
 import type { Access, WriteScope } from "@/lib/types";
 
 const withOffset = z
@@ -11,7 +10,8 @@ const withOffset = z
   .regex(
     /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/,
     "Use ISO-8601 with an offset, e.g. 2026-10-14T18:30:00+05:30 for 6:30 PM IST",
-  );
+  )
+  .refine((v) => !Number.isNaN(Date.parse(v)), "Not a real date and time");
 const id = z.string().min(1);
 const visibility = z.enum(
   (ENUMS.EventVisibility ?? ["public", "private", "unlisted"]) as [string, ...string[]],
@@ -264,7 +264,3 @@ export const ACTIONS: Record<ActionName, ActionDef> = {
     },
   },
 };
-
-export function whenText(start: string, end: string): string {
-  return formatIstRange(start, end);
-}
