@@ -8,6 +8,13 @@ import { detectAccess } from "../src/lib/edgeos/detect";
 import type { EdgeEvent, ListModel } from "../src/lib/edgeos/types";
 import { formatIstRange, istDate, istDayWindow } from "../src/lib/time";
 
+const rsvpAt = process.argv.indexOf("--rsvp");
+const rsvpId = rsvpAt > 0 ? process.argv[rsvpAt + 1] : undefined;
+if (rsvpAt > 0 && (!rsvpId || rsvpId.startsWith("--"))) {
+  console.error("Usage: pnpm smoke [--rsvp <event_id>]");
+  process.exit(2);
+}
+
 const key = process.env.EDGEOS_TEST_KEY;
 if (!key) throw new Error("Set EDGEOS_TEST_KEY");
 const r = await detectAccess(key);
@@ -25,15 +32,21 @@ const list = await edgeos<ListModel<EdgeEvent>>(key, "GET", "/events/portal/even
 for (const e of list.results.slice(0, 10))
   console.log(`${formatIstRange(e.start_time, e.end_time)}  ${e.title}  (${e.id})`);
 
-const i = process.argv.indexOf("--rsvp");
-if (i > 0) {
-  const id = process.argv[i + 1];
+if (rsvpId) {
+  const id = encodeURIComponent(rsvpId);
   console.log(
     "RSVP:",
     await edgeos(key, "POST", `/event-participants/portal/register/${id}`, { body: {} }),
   );
-  console.log(
-    "Cancel:",
-    await edgeos(key, "POST", `/event-participants/portal/cancel-registration/${id}`, { body: {} }),
-  );
+  try {
+    console.log(
+      "Cancel:",
+      await edgeos(key, "POST", `/event-participants/portal/cancel-registration/${id}`, {
+        body: {},
+      }),
+    );
+  } catch (e) {
+    console.error("Cancel failed; cancel this RSVP by hand in the portal.");
+    throw e;
+  }
 }
