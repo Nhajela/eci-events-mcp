@@ -28,6 +28,7 @@ patch for fixes, minor for new tools or pages, major for changes that make atten
 - Propose/confirm pipeline: `edgeos_propose` runs live checks and issues a 10-minute sealed proposal code; `edgeos_confirm` carries out exactly that action.
 
 ### Fixed
+- `/connect` no longer redirects automatically after 2.5 s; a focused Continue button waits for the attendee, and the success panel is announced politely to screen readers.
 - When the second-opinion reviewer is configured but fails, the proposal says the review couldn't run, and `reviewer_used` is true only when it actually ran.
 - Pages can no longer be framed (`X-Frame-Options: DENY`, `frame-ancestors 'none'`), and `/connect` sends no referrer.
 - Proposals refuse unknown fields (e.g. `recurrence`) with `BAD_PARAMS` listing the accepted fields instead of silently dropping them; hosting and venue guides list only settable fields and point to the portal for the rest.

@@ -21,34 +21,12 @@ export function ConnectForm({
   useEffect(() => {
     if (state.status === "ok") {
       track("key_accepted", { scopes: state.scopes.join(" ") });
-      const t = setTimeout(() => window.location.assign(state.redirectTo), 2500);
-      return () => clearTimeout(t);
     }
     if (state.status === "error") track("key_rejected", { reason: state.code });
   }, [state]);
 
   if (state.status === "ok") {
-    return (
-      <div className="rounded-xl border border-teal-700 bg-teal-50 p-5">
-        <h2 className="font-display text-xl font-semibold">Connected to {state.popupName}</h2>
-        <p className="mt-2">
-          Your key can: {state.scopes.join(", ")}. Taking you back to {clientName}…
-        </p>
-        <p className="mt-2 text-sm text-neutral-700">
-          Looks wrong? Make a new key at{" "}
-          <a className="underline" href={keyPage}>
-            {keyPage.replace("https://", "")}
-          </a>{" "}
-          and connect again.
-        </p>
-        <a
-          className="mt-4 inline-block rounded-md bg-neutral-900 px-4 py-2 font-medium text-white"
-          href={state.redirectTo}
-        >
-          Continue
-        </a>
-      </div>
-    );
+    return <ConnectedPanel state={state} clientName={clientName} keyPage={keyPage} />;
   }
 
   return (
@@ -87,5 +65,42 @@ export function ConnectForm({
         {pending ? "Checking with EdgeOS…" : "Connect"}
       </button>
     </form>
+  );
+}
+
+/** Success: no automatic redirect, so the attendee can read the scopes and go back when ready. */
+export function ConnectedPanel({
+  state,
+  clientName,
+  keyPage,
+}: {
+  state: Extract<ConnectState, { status: "ok" }>;
+  clientName: string;
+  keyPage: string;
+}) {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="rounded-xl border border-teal-700 bg-teal-50 p-5"
+    >
+      <h2 className="font-display text-xl font-semibold">Connected to {state.popupName}</h2>
+      <p className="mt-2">Your key can: {state.scopes.join(", ")}.</p>
+      <a
+        // biome-ignore lint/a11y/noAutofocus: the only next step after connecting; focus moves here so keyboard and screen reader users can continue
+        autoFocus
+        className="mt-4 block w-full rounded-lg bg-teal-700 px-4 py-3 text-center text-lg font-medium text-white hover:bg-teal-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
+        href={state.redirectTo}
+      >
+        Continue to {clientName}
+      </a>
+      <p className="mt-4 text-sm text-neutral-700">
+        Looks wrong? Make a new key at{" "}
+        <a className="underline" href={keyPage}>
+          {keyPage.replace("https://", "")}
+        </a>{" "}
+        and connect again.
+      </p>
+    </div>
   );
 }
