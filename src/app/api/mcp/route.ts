@@ -47,7 +47,8 @@ async function serveLegacy(
   }
 }
 
-function unauthorized(): Response {
+function unauthorized(tokenPresented: boolean): Response {
+  const error = tokenPresented ? 'error="invalid_token", ' : "";
   return Response.json(
     {
       error: "unauthorized",
@@ -56,15 +57,18 @@ function unauthorized(): Response {
     {
       status: 401,
       headers: {
-        "WWW-Authenticate": `Bearer resource_metadata="${origin()}/.well-known/oauth-protected-resource"`,
+        "WWW-Authenticate": `Bearer ${error}resource_metadata="${origin()}/.well-known/oauth-protected-resource"`,
       },
     },
   );
 }
 
 export async function POST(request: Request): Promise<Response> {
-  const access = await resolveAccess(request.headers.get("authorization"));
-  if (!access) return unauthorized();
+  const header = request.headers.get("authorization");
+  const access = await resolveAccess(header);
+  if (!access) return unauthorized(Boolean(header?.trim()));
+  // Registered before handling so events are flushed even if the handler throws.
+  after(flushAnalytics);
   const authInfo: AuthInfo = {
     token: "[sealed]",
     clientId: "eci-events",
@@ -74,7 +78,6 @@ export async function POST(request: Request): Promise<Response> {
   const res = (await isLegacyRequest(request))
     ? await serveLegacy(request, authInfo, access)
     : await handler.fetch(request, { authInfo });
-  after(flushAnalytics);
   return res;
 }
 

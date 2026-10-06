@@ -28,6 +28,7 @@ patch for fixes, minor for new tools or pages, major for changes that make atten
 - Propose/confirm pipeline: `edgeos_propose` runs live checks and issues a 10-minute sealed proposal code; `edgeos_confirm` carries out exactly that action.
 
 ### Fixed
+- `/api/mcp` flushes analytics even when a request fails and answers a rejected token with `error="invalid_token"`; `/oauth/token` logs server errors as one scrubbed JSON line.
 - `/connect` no longer redirects automatically after 2.5 s; a focused Continue button waits for the attendee, and the success panel is announced politely to screen readers.
 - When the second-opinion reviewer is configured but fails, the proposal says the review couldn't run, and `reviewer_used` is true only when it actually ran.
 - Pages can no longer be framed (`X-Frame-Options: DENY`, `frame-ancestors 'none'`), and `/connect` sends no referrer.
