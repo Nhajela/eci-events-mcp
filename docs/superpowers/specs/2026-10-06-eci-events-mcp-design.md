@@ -3,7 +3,7 @@
 Date: 2026-10-06
 Status: approved in conversation, awaiting written-spec review
 Repo: `Nhajela/eci-events-mcp` (public)
-Domain: `https://eci-events.positivesumcompany.com` — clients add `https://eci-events.positivesumcompany.com/api/mcp` (no token in the URL; OAuth handles the key)
+Origin: set by the `PUBLIC_ORIGIN` env var (production domain to be supplied by the operator). Clients add `<PUBLIC_ORIGIN>/api/mcp`; no token or key goes in the URL, OAuth handles the key.
 
 ## 1. Purpose
 
@@ -87,6 +87,7 @@ The MCP endpoint uses `@modelcontextprotocol/server` v2 `createMcpHandler(factor
 | Artifact | Payload | Lifetime |
 |---|---|---|
 | DCR `client_id` | redirect_uris, client_name, application_type | until secret rotation |
+| authorize request (`/connect?req=`) | client_id, redirect_uri, code_challenge, state, resource, client name | 10 min |
 | auth code | key, scopes, popup, client_id, redirect_uri, code_challenge, resource | 60 s |
 | access token | key, scopes, popup, aud = `<origin>/api/mcp` | 1 h |
 | refresh token | key, scopes, popup, client_id | until 2026-11-15T00:00:00+05:30 |
@@ -107,7 +108,7 @@ Rules:
 - Authorization server metadata (RFC 8414): `authorization_endpoint`, `token_endpoint`, `registration_endpoint`, `code_challenge_methods_supported: ["S256"]`, `client_id_metadata_document_supported: true`, `authorization_response_iss_parameter_supported: true`, grant types `authorization_code` and `refresh_token`, `token_endpoint_auth_methods_supported: ["none"]`.
 - Client identification:
   - CIMD: an https `client_id` URL. Fetch the document (5 s timeout, 64 KB cap, in-memory cache for the instance's life), require its `client_id` to equal the URL, and check `redirect_uri` against its `redirect_uris`.
-  - DCR (deprecated, kept): `POST /oauth/register` returns a sealed `client_id`. Localhost redirect URIs are accepted only when `application_type` is `native`.
+  - DCR (deprecated, kept): `POST /oauth/register` returns a sealed `client_id`. Loopback redirect URIs (`http://localhost`, `127.0.0.1`, `[::1]`) are accepted unless `application_type` is explicitly `web`, because 2025-era clients (e.g. Claude Code) omit `application_type`. Loopback redirects match regardless of port (RFC 8252).
 - `/oauth/authorize` validates client and redirect, then renders `/connect` with the request bound in a sealed hidden field. On submit: validate the key (§6 probe), mint the code, redirect with `code`, `state` and `iss`.
 - `/oauth/token`: `authorization_code` (verify PKCE S256, redirect_uri, client_id, `resource` if sent) and `refresh_token` (re-issue both). Public clients only.
 - Errors follow RFC 6749 JSON shapes.
@@ -116,7 +117,7 @@ Rules:
 
 At `/connect` submit:
 
-1. `GET /popups/portal/list` with the key. 401 → "key not recognised or revoked". 403 → the key lacks `events:read`; read tools will be off. On success, record the popup the key is bound to (id, name, slug).
+1. `GET /popups/portal/list` with the key. 401 → "key not recognised or revoked". 403 → the key lacks `events:read`; connecting is refused with "make a key with Read events ticked" (EdgeOS's key form always includes `events:read`, and we need it to find the popup). On success, record the popup the key is bound to (id, name, slug).
 2. For each write scope, send a side-effect-free probe: a write to a random UUID (`POST /event-participants/portal/register/<uuid>`, `POST /events/portal/events/<uuid>/cancel`, `PATCH /event-venues/portal/venues/<uuid>`). 403 → scope missing; 404/422 → scope present. This relies on EdgeOS enforcing the route policy before the handler runs, which `_enforce_api_key_policy` does in the auth dependency.
 3. Seal the detected scopes into the code and tokens.
 
@@ -154,7 +155,7 @@ Topics: `schedule`, `recurring`, `rsvp`, `hosting`, `venues`, `limits`. Each is 
 
 Write actions available through propose (per scope): `rsvp`, `cancel_rsvp` (rsvp:write); `check_availability` is a check inside propose, not an action; `create_event`, `update_event`, `cancel_event`, `hide_event`, `unhide_event`, `invite`, `remove_invitation` (events:write); `create_venue`, `update_venue`, `delete_venue` (venues:write).
 
-Conventions: every time is returned as IST with the UTC value alongside; recurring rows include `occurrence_start`; results are short markdown plus `structuredContent`; reads carry `readOnlyHint`; `edgeos_confirm` carries `destructiveHint`; `tools/list` results carry `ttlMs` (5 min) with `cacheScope` per scope set.
+Conventions: every time is returned as IST with the UTC value alongside; recurring rows include `occurrence_start`; results are short markdown plus `structuredContent`; reads carry `readOnlyHint`; `edgeos_confirm` carries `destructiveHint`; `tools/list` caching is left to SDK defaults (the list depends on the caller's scopes).
 
 ### Prompts
 
@@ -171,7 +172,7 @@ Conventions: every time is returned as IST with the UTC value alongside; recurri
 1. Validate `params` against the action's Zod schema (generated enums).
 2. Run checks. Blockers stop the proposal (no code). Warnings are returned and the agent must raise them.
    - Live: event exists and is in the future; for recurring events `occurrence_start` matches a real occurrence; RSVP eligibility; already RSVPed or not RSVPed (for cancel); overlap with the attendee's other RSVPs (`rsvped_only=true` for that day); venue availability (`check-availability`) for create/update.
-   - Guidelines: a start time between 00:00 and 06:00 IST (likely UTC misread); create/update without description or venue; duration over 6 h or under 15 min; more than 3 writes of the same action in this conversation (bulk); event outside the popup's dates.
+   - Guidelines: a start time between 00:00 and 06:00 IST (likely UTC misread); create/update without description or venue; duration over 6 h or under 15 min; cancelling an event that has RSVPs (warns with the count); deleting a venue with upcoming events (warns with the count); event outside the popup's dates.
 3. Reviewer (create/update event, venue writes only; on when `REVIEWER_MODEL` is set): send the proposal and `guides/hosting.md` to the reviewer model with a fixed rubric; append its notes as warnings, labelled as a second model's view. 8 s timeout; on timeout or failure, proceed without it and say so.
 4. Respond with: the plain-language summary to show the user verbatim (title, local date and time, venue, action); warnings; the guideline excerpt for this action; steering text ("Show the summary, raise each warning, and call `edgeos_confirm` only after the user explicitly says yes"); the sealed proposal code.
 
@@ -181,7 +182,7 @@ The reviewer receives event content (titles, descriptions, times), never keys or
 
 ## 9. Instructions generation
 
-- `pnpm spec:sync` fetches `openapi.json`, filters it to the routes in `spec/route-policy.json`, writes `spec/edgeos-openapi.json`, then runs `gen-reference` to produce `src/generated/reference.ts` (per-route parameters, enums, field descriptions, response shapes) and `src/generated/edgeos-types.ts` (via `openapi-typescript`).
+- `pnpm spec:sync` fetches `openapi.json`, filters it to the routes in `spec/route-policy.json`, writes `spec/edgeos-openapi.json`, then runs `gen-reference` to produce `src/generated/reference.ts` (per-route parameters, enums, field descriptions, response shapes). EdgeOS response types used by the code are hand-written in `src/lib/edgeos/types.ts`, limited to the fields we read.
 - Generated files are committed. Tool descriptions, Zod schemas and guide topics import from them.
 - A daily GitHub Action runs `spec:sync` and opens a PR when anything changed, including the route policy (compared against the upstream `security.py`).
 
@@ -209,18 +210,29 @@ Design follows the ECI priorities: usability over aesthetics, solid high-contras
 
 ### `/trust`
 
-- Tabs: **In plain words**, **Analogy** (sealed envelope: we hold the letter opener but never keep envelopes), **Technical** (JWE, PKCE, CIMD/DCR, the who-can-see table, trade-offs), **Verify it yourself**. One diagram per tab (Mermaid rendered at build time to SVG, or hand-drawn SVG).
+- Tabs: **In plain words**, **Analogy** (sealed envelope: we hold the letter opener but never keep envelopes), **Technical** (JWE, PKCE, CIMD/DCR, the who-can-see table, trade-offs), **Verify it yourself**. One diagram per tab (Mermaid, rendered client-side).
 - "Where this runs" box, live from `/api/build-info`: host, commit (linked), build time, deploy method.
-- The four files that touch the key, linked at the live commit: `src/lib/seal.ts`, `src/app/connect/...` submit handler, `src/lib/edgeos/client.ts`, `src/mcp/lib/tool-wrapper.ts`.
+- The files that touch the key, linked at the live commit: `src/lib/seal.ts`, `src/lib/oauth/authorize.ts`, `src/lib/edgeos/client.ts`, `src/lib/scrub.ts`, `src/mcp/lib/tool-wrapper.ts`.
 - A copyable prompt for the reader's own AI to audit those files.
 - What is proven at level 1 and what is still trusted, in plain words; levels 2 and 3 described as planned.
 - What analytics collects (§10) and what the reviewer sees (§8).
+
+### `/how-it-works` ("I don't know how this works")
+
+Three layers, as tabs: **New to this** (what a connector is, what the AI is told, that every change needs the attendee's yes; two diagrams), **Curious** (instructions in four layers, every tool in plain words, prompts, every proposal check, where the instructions come from), **Technical** (rendered from the running code, never copied by hand: server instructions, a sample `edgeos_initialize` output, every tool's description, input schema and annotations from a real in-process `tools/list`, proposal steering text, reviewer rubric, prompts, all guides, write actions, the EdgeOS key route policy, analytics fields, links to the repo and this spec).
+
+Rule: every piece of text injected into a model is an exported constant or generated value, so this page can display it. No hidden prompt text.
 
 ### `/connect`
 
 Paste-key form, link to `/portal/agentic-access`, detected scopes shown after validation, error messages that say what to fix.
 
-## 12. Testing
+## 12. Process
+
+- Atomic commits with Conventional Commit prefixes.
+- `CHANGELOG.md` in Keep a Changelog format with Semantic Versioning, starting at 0.1.0; every feat/fix adds an Unreleased line. First public deploy is 1.0.0. Patch for fixes, minor for new tools or pages, major for changes that force attendees to reconnect.
+
+## 13. Testing
 
 - Unit (Vitest): seal round-trip, tamper rejection, wrong-`typ` rejection, expiry, secret rotation; PKCE; CIMD validation (mismatched `client_id`, oversized doc, timeout); DCR sealing and native-localhost rule; key scrubbing; every proposal check; IST formatting and day-window conversion; error mapping.
 - OAuth flow integration: full code → token → refresh for a CIMD client and a DCR client, against the Next route handlers.
@@ -228,6 +240,6 @@ Paste-key form, link to `/portal/agentic-access`, detected scopes shown after va
 - EdgeOS: recorded fixtures for every route used.
 - Live smoke (`scripts/smoke.ts`, manual, needs a test key from the operator): scope probes (§6), list events, propose/confirm an RSVP and cancel it.
 
-## 13. Out of scope (for now)
+## 14. Out of scope (for now)
 
 Provability levels 2 (CI-only deploys with GitHub build attestations) and 3 (TEE hosting with runtime attestation); attendee directory and profile (need a human session token); a database of any kind; non-ECI popups beyond whatever the key is bound to.
