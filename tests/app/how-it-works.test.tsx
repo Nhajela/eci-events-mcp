@@ -14,7 +14,7 @@ vi.mock("next/font/google", () => ({
   JetBrains_Mono: () => ({ className: "", variable: "" }),
 }));
 
-const esc = (s: string) => renderToStaticMarkup(<>{s}</>);
+const esc = (s: string) => renderToStaticMarkup(<span>{s}</span>).slice(6, -7);
 
 describe("/how-it-works", () => {
   it("has three layers and shows every injected text verbatim", async () => {

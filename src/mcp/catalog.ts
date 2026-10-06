@@ -31,7 +31,10 @@ export async function getCatalog(): Promise<{
   tools: CatalogTool[];
   prompts: { name: string; description?: string }[];
 }> {
-  const handler = createMcpHandler(() => buildServer(SAMPLE_ACCESS), { responseMode: "json" });
+  const handler = createMcpHandler(
+    () => buildServer(SAMPLE_ACCESS, new Date(), { analytics: "describe" }),
+    { responseMode: "json" },
+  );
   const authInfo = {
     token: "[sample]",
     clientId: "catalog",

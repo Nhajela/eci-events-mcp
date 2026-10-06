@@ -45,9 +45,23 @@ export function analyticsBeforeSend<T extends Ev>(event: T): T {
   return { ...event, properties: { ...scrubbed, $process_person_profile: false } };
 }
 
-export function instrumentServer(server: McpServer, access: Access): void {
-  const ph = posthog();
-  if (!ph) return;
+let silent: PostHog | undefined;
+
+/** Never sends: a disabled client, so a described server shows the same tool surface without events. */
+function silentPosthog(): PostHog {
+  silent ??= new PostHog(process.env.POSTHOG_PROJECT_TOKEN ?? "", { disabled: true });
+  return silent;
+}
+
+/** `send: false` instruments with a client that never sends (used to describe the server on /how-it-works). */
+export function instrumentServer(
+  server: McpServer,
+  access: Access,
+  opts: { send?: boolean } = {},
+): void {
+  const live = posthog();
+  if (!live) return;
+  const ph = opts.send === false ? silentPosthog() : live;
   instrument(server, ph, {
     context: true,
     enableConversationId: true,

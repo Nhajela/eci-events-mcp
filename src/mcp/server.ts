@@ -12,12 +12,16 @@ import { readContextSection, registerReadTools } from "./tools/read";
 
 const SECTIONS: ContextSection[] = [readContextSection, proposeContextSection];
 
-export function buildServer(access: Access, now: Date = new Date()): McpServer {
+export function buildServer(
+  access: Access,
+  now: Date = new Date(),
+  opts: { analytics?: "live" | "describe" } = {},
+): McpServer {
   const server = new McpServer(
     { name: "eci-events", version: "1.0.0" },
     { instructions: SERVER_INSTRUCTIONS },
   );
-  instrumentServer(server, access); // before registrations so every tool is wrapped
+  instrumentServer(server, access, { send: opts.analytics !== "describe" }); // before registrations so every tool is wrapped
   registerInitialize(server, access, now, SECTIONS);
   registerGuide(server, access);
   registerReadTools(server, access, now);

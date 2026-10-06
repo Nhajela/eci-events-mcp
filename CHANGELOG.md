@@ -28,6 +28,7 @@ patch for fixes, minor for new tools or pages, major for changes that make atten
 - Propose/confirm pipeline: `edgeos_propose` runs live checks and issues a 10-minute sealed proposal code; `edgeos_confirm` carries out exactly that action.
 
 ### Fixed
+- How-it-works catalog never sends analytics events, and the analytics and check descriptions match the code.
 - Ops: documented a working `pnpm -s secret:new --pipe` command (pnpm's banner corrupted piped secrets), CI runs with read-only permissions, `pnpm smoke --rsvp` validates its argument and always attempts the cancel.
 - Analytics: the normal `proposal_created` and `proposal_confirmed` events are now captured, tool error text is dropped before send, and analytics stays off unless both `POSTHOG_PROJECT_TOKEN` and `POSTHOG_ID_SALT` are set.
 - Propose/confirm: summaries show every sealed param, title-only updates to recurring or running events are no longer blocked, proposals bind to a hash of the whole key, impossible dates are rejected, and the overlap window covers the previous day.

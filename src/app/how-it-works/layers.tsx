@@ -128,7 +128,8 @@ export function Curious({ tools }: { tools: CatalogTool[] }) {
       <ul className="list-disc space-y-1 pl-5">
         {CHECK_LIST.map((c) => (
           <li key={c.rule}>
-            <b>{c.kind === "blocker" ? "Stops it" : "Warns"}</b> ({c.action}): {c.rule}
+            <b>{c.kind === "blocker" ? "Stops it" : c.kind === "warning" ? "Warns" : "Rule"}</b> (
+            {c.action}): {c.rule}
           </li>
         ))}
       </ul>
@@ -166,6 +167,11 @@ export function Technical({
           {SPEC_PATH}
         </a>
         .
+      </p>
+
+      <p>
+        This page reflects this deployment's configuration; it is rebuilt on every deploy and
+        refreshed hourly.
       </p>
 
       <H>Protocol</H>
@@ -289,11 +295,13 @@ export function Technical({
         <code>POSTHOG_ID_SALT</code>. Then PostHog MCP Analytics records one event per tool call:
         tool name, success or error, duration, AI app and model, the AI's one-line reason (a{" "}
         <code>context</code> argument PostHog adds), a conversation id, and requests for missing
-        features (a <code>get_more_tools</code> tool PostHog adds). Tool arguments, responses and
-        error messages are dropped before sending. The only identity is an HMAC of your key's public
-        prefix; there are no person profiles. Proposal events record the action, the warning count,
-        and whether it was confirmed. When analytics is on, the tool list above also shows the
-        PostHog-added <code>context</code> and <code>conversation_id</code> arguments and{" "}
+        features (a <code>get_more_tools</code> tool PostHog adds). It also records connection and
+        listing events (initialize, tools list, prompts list), and every event carries the popup
+        slug and your key's scopes. Tool arguments, responses and error messages are dropped before
+        sending. The only identity is an HMAC of your key's public prefix; there are no person
+        profiles. Proposal events record the action, the warning count, and whether it was
+        confirmed. When analytics is on, the tool list above also shows the PostHog-added{" "}
+        <code>context</code> and <code>conversation_id</code> arguments and{" "}
         <code>get_more_tools</code>, because that is what the AI sees.
       </p>
     </div>
