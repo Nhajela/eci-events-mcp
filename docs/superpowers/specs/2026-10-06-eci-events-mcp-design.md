@@ -3,6 +3,7 @@
 Date: 2026-10-06
 Status: approved in conversation, awaiting written-spec review
 Repo: `Nhajela/eci-events-mcp` (public)
+Domain: `https://eci-events.positivesumcompany.com` — clients add `https://eci-events.positivesumcompany.com/api/mcp` (no token in the URL; OAuth handles the key)
 
 ## 1. Purpose
 
