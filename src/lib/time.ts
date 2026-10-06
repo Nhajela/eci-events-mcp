@@ -1,10 +1,12 @@
-﻿export const TZ = "Asia/Kolkata";
+export const TZ = "Asia/Kolkata";
 const IST_OFFSET_MS = 330 * 60_000;
 const DAY_MS = 86_400_000;
 
 // Newer ICU puts U+202F before AM/PM; models and tests expect a plain space.
+const NARROW_NBSP = String.fromCharCode(0x202f);
+const NBSP = String.fromCharCode(0x00a0);
 export function cleanSpaces(s: string): string {
-  return s.replace(/[ \u202F]/g, " ");
+  return s.replaceAll(NARROW_NBSP, " ").replaceAll(NBSP, " ");
 }
 
 export function istDayLabelFromDate(d: Date): string {

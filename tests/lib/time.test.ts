@@ -41,11 +41,14 @@ describe("IST time", () => {
     expect(hasOffset("2026-10-14T18:00:00")).toBe(false);
   });
   it("normalizes spaces in time strings", () => {
-    expect(cleanSpaces("8:30 PM")).toBe("8:30 PM");
-    expect(cleanSpaces("8:30 PM")).toBe("8:30 PM");
+    const NARROW = String.fromCharCode(0x202f);
+    const NB = String.fromCharCode(0x00a0);
+    expect(cleanSpaces(`8:30${NARROW}PM`)).toBe("8:30 PM");
+    expect(cleanSpaces(`8:30${NB}PM`)).toBe("8:30 PM");
   });
   it("formatIst output contains no U+202F", () => {
+    const NARROW = String.fromCharCode(0x202f);
     const formatted = formatIst("2026-10-14T15:00:00Z");
-    expect(formatted).not.toContain(" ");
+    expect(formatted.includes(NARROW)).toBe(false);
   });
 });
