@@ -137,11 +137,13 @@ function timeChecks(
   { access, now }: CheckContext,
   blockers: string[],
   warnings: string[],
+  startGiven = true,
 ) {
   const s0 = new Date(start);
   const e0 = new Date(end);
   if (e0 <= s0) blockers.push("The event ends before it starts.");
-  if (s0 < now) blockers.push("The start time is in the past.");
+  // Only a new start time can be in the past; extending a running event's end is fine.
+  if (startGiven && s0 < now) blockers.push("The start time is in the past.");
   const minutes = (e0.getTime() - s0.getTime()) / 60_000;
   if (minutes > 0 && minutes < 15)
     warnings.push(`It's only ${minutes} minutes long. Is that right?`);
@@ -183,7 +185,8 @@ async function hostingChecks(
     end_time: string;
   };
   const timeGiven = "start_time" in p || "end_time" in p;
-  if (timeGiven) timeChecks(merged.start_time, merged.end_time, ctx, blockers, warnings);
+  if (timeGiven)
+    timeChecks(merged.start_time, merged.end_time, ctx, blockers, warnings, "start_time" in p);
   if (!s(merged.content))
     warnings.push(
       "There's no description. A few sentences on what happens and who it's for helps people decide.",
@@ -257,7 +260,12 @@ export async function runChecks(action: ActionName, p: P, ctx: CheckContext): Pr
     );
     if (upcoming.results.length)
       warnings.push(`${upcoming.results.length} upcoming events use this venue.`);
-    return { blockers, warnings, summary: `Delete venue ${String(p.venue_id)}.` };
+    const name = (await venueMap(ctx.access)).get(String(p.venue_id));
+    return {
+      blockers,
+      warnings,
+      summary: name ? `Delete the venue “${name}”.` : `Delete venue ${String(p.venue_id)}.`,
+    };
   }
 
   // Event-scoped actions: cancel/hide/unhide/invite/remove_invitation

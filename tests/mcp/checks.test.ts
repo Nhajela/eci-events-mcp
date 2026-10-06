@@ -271,3 +271,47 @@ describe("hosting checks", () => {
     expect(JSON.stringify(parsed.error?.issues)).toContain("Not a real date");
   });
 });
+
+describe("final-review check fixes", () => {
+  it("names the venue when deleting it", async () => {
+    mockEdgeos([
+      { method: "GET", path: "/events/portal/events", body: empty },
+      { method: "GET", path: "/event-venues/portal/venues", body: venues },
+    ]);
+    const r = await runChecks("delete_venue", { venue_id: "v1" }, ctx);
+    expect(r.summary).toBe("Delete the venue “Beach Deck”.");
+  });
+
+  it("allows extending a running event by end time only", async () => {
+    const running = {
+      ...base,
+      start_time: "2026-10-14T05:30:00Z",
+      end_time: "2026-10-14T06:30:00Z",
+      venue_id: null,
+      custom_location_name: "North lawn",
+    };
+    mockEdgeos([
+      { method: "GET", path: "/events/portal/events/e1", body: running },
+      { method: "GET", path: "/event-venues/portal/venues", body: venues },
+    ]);
+    const r = await runChecks(
+      "update_event",
+      { event_id: "e1", end_time: "2026-10-14T07:00:00Z" },
+      ctx,
+    );
+    expect(r.blockers).toEqual([]);
+  });
+
+  it("still blocks moving the start into the past", async () => {
+    mockEdgeos([
+      { method: "GET", path: "/events/portal/events/e1", body: { ...base, venue_id: null } },
+      { method: "GET", path: "/event-venues/portal/venues", body: venues },
+    ]);
+    const r = await runChecks(
+      "update_event",
+      { event_id: "e1", start_time: "2026-10-14T05:00:00Z" },
+      ctx,
+    );
+    expect(r.blockers.join(" ")).toContain("in the past");
+  });
+});

@@ -38,7 +38,7 @@ export const CHECK_LIST: { action: string; kind: "blocker" | "warning" | "rule";
     {
       action: "create_event, update_event",
       kind: "blocker",
-      rule: "When a start or end time is given: it must end after it starts and start in the future. For an update, this runs only if the start or end time is being changed.",
+      rule: "When a start or end time is given: it must end after it starts, and a new start time must be in the future. For an update, this runs only if the start or end time is being changed, so a running event's end can be extended.",
     },
     {
       action: "create_event, update_event",
