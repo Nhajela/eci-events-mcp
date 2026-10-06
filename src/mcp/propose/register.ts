@@ -117,6 +117,12 @@ export function registerProposeTools(
           `## Next\n${STEERING}`,
           `Proposal code (expires in 10 minutes): \`${code}\``,
         ].filter(Boolean);
+        captureEvent(access, "proposal_created", {
+          action,
+          blocked: false,
+          warnings: checks.warnings.length,
+          reviewer_used: Boolean(notes),
+        });
         return ok(parts.join("\n\n"), {
           blocked: false,
           summary: checks.summary,
@@ -151,6 +157,10 @@ export function registerProposeTools(
       if (!hasScope(access, def.scope))
         throw new ToolError("NOT_ENABLED", `This key doesn't have ${def.scope}.`);
       const r = await def.execute(access, p.params);
+      captureEvent(access, "proposal_confirmed", {
+        action: p.action,
+        seconds_to_confirm: Math.round(Date.now() / 1000 - p.iat),
+      });
       return ok(`${r.text}\n(${p.summary})`, {
         action: p.action,
         result: r.data as Record<string, unknown>,

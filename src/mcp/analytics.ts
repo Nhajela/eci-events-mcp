@@ -13,26 +13,34 @@ let client: PostHog | null | undefined;
 function posthog(): PostHog | null {
   if (client === undefined) {
     const token = process.env.POSTHOG_PROJECT_TOKEN;
-    client = token
-      ? new PostHog(token, {
-          host: process.env.POSTHOG_HOST ?? "https://us.i.posthog.com",
-          flushAt: 1,
-          flushInterval: 0,
-        })
-      : null;
+    // Off unless both the token and the id salt are set.
+    client =
+      token && process.env.POSTHOG_ID_SALT
+        ? new PostHog(token, {
+            host: process.env.POSTHOG_HOST ?? "https://us.i.posthog.com",
+            flushAt: 1,
+            flushInterval: 0,
+          })
+        : null;
   }
   return client;
 }
 
 function who(access: Access): string {
-  return pseudonymId(access.key, process.env.POSTHOG_ID_SALT ?? "eci-events");
+  return pseudonymId(access.key, process.env.POSTHOG_ID_SALT ?? "");
 }
 
 type Ev = { properties?: Record<string, unknown> } | null;
 
 export function analyticsBeforeSend<T extends Ev>(event: T): T {
   if (!event?.properties) return event;
-  const { $mcp_parameters: _p, $mcp_response: _r, ...rest } = event.properties;
+  // Tool error text can echo argument values, so it goes too.
+  const {
+    $mcp_parameters: _p,
+    $mcp_response: _r,
+    $mcp_error_message: _e,
+    ...rest
+  } = event.properties;
   const scrubbed = JSON.parse(scrubKeys(JSON.stringify(rest))) as Record<string, unknown>;
   return { ...event, properties: { ...scrubbed, $process_person_profile: false } };
 }
