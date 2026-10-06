@@ -2,7 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { SERVER_INSTRUCTIONS } from "@/mcp/instructions";
 import { PROMPTS } from "@/mcp/prompts";
-import { STEERING } from "@/mcp/propose/register";
+import { REVIEW_FAILED, STEERING } from "@/mcp/propose/register";
 import { RUBRIC } from "@/mcp/propose/reviewer";
 import { useTestSecrets } from "../helpers";
 
@@ -23,6 +23,7 @@ describe("/how-it-works", () => {
     for (const t of ["New to this", "Curious", "Technical"]) expect(html).toContain(t);
     expect(html).toContain(esc(SERVER_INSTRUCTIONS.split("\n")[0]));
     expect(html).toContain(esc(STEERING));
+    expect(html).toContain(esc(REVIEW_FAILED));
     expect(html).toContain(esc(RUBRIC.split("\n")[0]));
     for (const p of PROMPTS) expect(html).toContain(esc(p.text));
     expect(html).toContain("edgeos_venue_availability");

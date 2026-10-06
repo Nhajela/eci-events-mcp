@@ -9,7 +9,7 @@ import { SERVER_INSTRUCTIONS } from "@/mcp/instructions";
 import { PROMPTS } from "@/mcp/prompts";
 import { ACTIONS } from "@/mcp/propose/actions";
 import { CHECK_LIST } from "@/mcp/propose/check-list";
-import { proposeContextSection, STEERING } from "@/mcp/propose/register";
+import { proposeContextSection, REVIEW_FAILED, STEERING } from "@/mcp/propose/register";
 import { RUBRIC } from "@/mcp/propose/reviewer";
 import { readContextSection } from "@/mcp/tools/read";
 import policy from "../../../spec/route-policy.json";
@@ -219,8 +219,10 @@ export function Technical({
         The reviewer runs only when the operator has configured a reviewer model (
         <code>REVIEWER_MODEL</code> and Vertex AI credentials). It is a Gemini model on Vertex AI
         and receives this rubric, the hosting or venues guide, and the proposal's fields. Never
-        sent: keys or attendee lists.
+        sent: keys or attendee lists. If the reviewer is configured but can't run (an error or a
+        timeout), the proposal still goes ahead and the AI is told:
       </p>
+      <Pre>{REVIEW_FAILED}</Pre>
 
       <H>Prompts ({prompts.length})</H>
       {PROMPTS.map((p) => (

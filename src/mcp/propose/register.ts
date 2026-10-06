@@ -11,11 +11,17 @@ import { ToolError, withToolHandler } from "@/mcp/lib/tool-wrapper";
 import { ACTIONS, type ActionName } from "./actions";
 import { runChecks } from "./checks";
 
+/** "off": not configured. "failed": configured but couldn't run. "ok": ran (notes may be empty). */
+export type ReviewResult = { status: "off" | "failed" | "ok"; notes: string[] };
+
 export type Reviewer = (
   action: ActionName,
   params: Record<string, unknown>,
   summary: string,
-) => Promise<string[] | null>;
+) => Promise<ReviewResult>;
+
+/** Added to a reviewed proposal when the second-opinion review was configured but couldn't run. */
+export const REVIEW_FAILED = "The second-opinion review couldn't run this time.";
 
 type ProposalPayload = {
   action: ActionName;
@@ -97,7 +103,11 @@ export function registerProposeTools(
             { blocked: true, blockers: checks.blockers },
           );
         }
-        const notes = def.reviewed && review ? await review(action, clean, checks.summary) : null;
+        const reviewed: ReviewResult =
+          def.reviewed && review
+            ? await review(action, clean, checks.summary)
+            : { status: "off", notes: [] };
+        const notes = reviewed.notes;
         const code = await seal(
           "proposal",
           {
@@ -114,9 +124,10 @@ export function registerProposeTools(
           checks.warnings.length
             ? `## Warnings (raise each one)\n${checks.warnings.map((w) => `- ${w}`).join("\n")}`
             : "No warnings.",
-          notes?.length
+          notes.length
             ? `## Second opinion (another model checked this against the hosting guidelines)\n${notes.map((n) => `- ${n}`).join("\n")}`
             : null,
+          reviewed.status === "failed" ? REVIEW_FAILED : null,
           `## Guideline\n${GUIDES[def.guide]}`,
           `## Next\n${STEERING}`,
           `Proposal code (expires in 10 minutes): \`${code}\``,
@@ -125,14 +136,15 @@ export function registerProposeTools(
           action,
           blocked: false,
           warnings: checks.warnings.length,
-          reviewer_used: Boolean(notes),
+          reviewer_used: reviewed.status === "ok",
         });
         return ok(parts.join("\n\n"), {
           blocked: false,
           summary: checks.summary,
           params: clean,
           warnings: checks.warnings,
-          review: notes ?? [],
+          review: notes,
+          review_status: reviewed.status,
           code,
         });
       },

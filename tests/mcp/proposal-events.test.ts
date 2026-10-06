@@ -1,9 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
+import { REVIEW_FAILED } from "@/mcp/propose/register";
 import { mockEdgeos } from "../edgeos-mock";
 import { accessToken, useTestSecrets } from "../helpers";
 import { connectClient } from "../mcp-client";
 
 const captureEvent = vi.hoisted(() => vi.fn());
+const review = vi.hoisted(() => vi.fn());
+vi.mock("@/mcp/propose/reviewer", () => ({ RUBRIC: "rubric", reviewProposal: review }));
 vi.mock("@/mcp/analytics", () => ({
   captureEvent,
   instrumentServer: () => {},
@@ -89,5 +92,52 @@ describe("proposal analytics events", () => {
     expect(name).toBe("proposal_confirmed");
     expect(props).toMatchObject({ action: "rsvp" });
     expect(props.seconds_to_confirm).toBe(42);
+  });
+});
+
+describe("reviewer status", () => {
+  const host = {
+    name: "edgeos_propose",
+    arguments: {
+      action: "create_event",
+      params: {
+        title: "Morning Swim",
+        start_time: "2026-10-15T07:00:00+05:30",
+        end_time: "2026-10-15T08:00:00+05:30",
+        custom_location_name: "Beach",
+      },
+    },
+  };
+  const hostAccess = () => accessToken({ scopes: ["events:read", "rsvp:write", "events:write"] });
+
+  it("says so when the review couldn't run", async () => {
+    captureEvent.mockClear();
+    review.mockResolvedValueOnce({ status: "failed", notes: [] });
+    mockEdgeos(routes(EVENT));
+    const client = await connectClient(await hostAccess());
+    const t = text(await client.callTool(host));
+    expect(t).toContain("Proposal code");
+    expect(t).toContain(REVIEW_FAILED);
+    expect(captureEvent.mock.calls[0][2]).toMatchObject({ reviewer_used: false });
+  });
+
+  it("shows notes and records reviewer_used when it ran", async () => {
+    captureEvent.mockClear();
+    review.mockResolvedValueOnce({ status: "ok", notes: [] });
+    mockEdgeos(routes(EVENT));
+    const client = await connectClient(await hostAccess());
+    const t = text(await client.callTool(host));
+    expect(t).not.toContain(REVIEW_FAILED);
+    expect(captureEvent.mock.calls[0][2]).toMatchObject({ reviewer_used: true });
+  });
+
+  it("stays quiet when the reviewer is off", async () => {
+    captureEvent.mockClear();
+    review.mockResolvedValueOnce({ status: "off", notes: [] });
+    mockEdgeos(routes(EVENT));
+    const client = await connectClient(await hostAccess());
+    const t = text(await client.callTool(host));
+    expect(t).not.toContain(REVIEW_FAILED);
+    expect(captureEvent.mock.calls[0][2]).toMatchObject({ reviewer_used: false });
   });
 });
