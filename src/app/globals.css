@@ -1,1 +1,14 @@
 @import "tailwindcss";
+
+/* next/font sets --nf-* on <html>; the theme tokens read them (reusing the same names would be circular). */
+@theme inline {
+  --font-display: var(--nf-display), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--nf-body), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--nf-mono), ui-monospace, monospace;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
