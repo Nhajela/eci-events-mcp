@@ -7,6 +7,7 @@ patch for fixes, minor for new tools or pages, major for changes that make atten
 ## [Unreleased]
 
 ### Added
+- Agent setup guide at /connect.md and /agents/connect.md: paste the link to an AI agent and it can add the server (Claude Code, JSON clients, Codex) or walk you through claude.ai and ChatGPT.
 - Site name "Edge City India - Events MCP (Community Built)" in page titles, OAuth metadata and the MCP server title; social preview card (Open Graph and X) drawn from the value proposition and an example chat.
 - Blocked proposals now include the guideline for that action too, so the AI always gets the hosting and RSVP guidelines.
 - Landing page: community-built disclaimer (by @HiiNaman), value-first hero with an example chat, four use-case cards, and a plain "What we track" note.

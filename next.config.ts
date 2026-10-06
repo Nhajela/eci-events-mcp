@@ -38,6 +38,8 @@ const nextConfig: NextConfig = {
     // before the filesystem check (same approach as kx-tools).
     return {
       beforeFiles: [
+        { source: "/connect.md", destination: "/api/agent-guide" },
+        { source: "/agents/connect.md", destination: "/api/agent-guide" },
         { source: "/.well-known/oauth-authorization-server", destination: "/api/oauth-metadata" },
         {
           source: "/.well-known/oauth-authorization-server/:path*",
