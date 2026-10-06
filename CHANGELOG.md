@@ -31,6 +31,7 @@ patch for fixes, minor for new tools or pages, major for changes that make atten
 - Propose/confirm pipeline: `edgeos_propose` runs live checks and issues a 10-minute sealed proposal code; `edgeos_confirm` carries out exactly that action.
 
 ### Fixed
+- claude.ai setup steps match the current Customize → Connectors flow, including the sign-in choices and Team/Enterprise path.
 - Deleting a venue names it in the proposal summary, and extending a running event's end time is no longer blocked as "start in the past".
 - `/api/mcp` flushes analytics even when a request fails and answers a rejected token with `error="invalid_token"`; `/oauth/token` logs server errors as one scrubbed JSON line.
 - `/connect` no longer redirects automatically after 2.5 s; a focused Continue button waits for the attendee, and the success panel is announced politely to screen readers.

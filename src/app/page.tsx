@@ -92,12 +92,27 @@ export default async function Home() {
                       <KeyStep />
                       <Step n={2} title="Add the connector">
                         <p>
-                          In Claude: <b>Settings → Connectors → Add custom connector</b>. Name it
-                          “Edge City events” and paste this URL:
+                          In Claude, open{" "}
+                          <a className="underline" href="https://claude.ai/customize/connectors">
+                            <b>Customize → Connectors</b>
+                          </a>
+                          , press <b>+ Add</b>, then <b>Add custom connector</b>. Name it “Edge City
+                          events” and paste this URL:
                         </p>
                         <UrlBox url={url} />
                         <p>
-                          Press <b>Add</b>, then <b>Connect</b>.
+                          If Claude asks how to sign in, pick <b>Sign in now</b>, and for the OAuth
+                          client pick <b>Use Claude's published identity</b> (recommended). Press{" "}
+                          <b>Add</b>, then <b>Connect</b>.
+                        </p>
+                        <p className="text-sm text-neutral-600">
+                          Free plan: you can add one custom connector. Team or Enterprise: an Owner
+                          adds it once under <b>Organization settings → Connectors</b> (Add → Custom
+                          → Web), then everyone presses <b>Connect</b> on it in Customize →
+                          Connectors.
+                        </p>
+                        <p className="text-sm text-neutral-600">
+                          In a chat, turn it on from the <b>+</b> button → <b>Connectors</b>.
                         </p>
                       </Step>
                       {pasteStep}

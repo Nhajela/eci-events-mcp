@@ -22,6 +22,16 @@ describe("pages", () => {
     expect(html).toContain("Never paste your key into a chat");
   });
 
+  it("claude.ai steps match the current Customize > Connectors flow", async () => {
+    const { default: Home } = await import("@/app/page");
+    const html = renderToStaticMarkup(await Home());
+    expect(html).toContain("https://claude.ai/customize/connectors");
+    expect(html).toContain("Add custom connector");
+    expect(html).toContain("Use Claude&#x27;s published identity");
+    expect(html).toContain("Organization settings → Connectors");
+    expect(html).not.toContain("Settings → Connectors → Add custom connector");
+  });
+
   it("landing leads with the community disclaimer, the value and use cases", async () => {
     const { default: Home } = await import("@/app/page");
     const html = renderToStaticMarkup(await Home());
