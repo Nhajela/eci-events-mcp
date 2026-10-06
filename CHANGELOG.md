@@ -14,6 +14,7 @@ patch for fixes, minor for new tools or pages, major for changes that make atten
 - Popup and write-scope detection from a key using side-effect-free 403 vs 404 probes (`src/lib/edgeos/detect.ts`).
 - OAuth building blocks: PKCE S256 verification, authorization-server and protected-resource metadata, and stateless CIMD and DCR client resolution (`src/lib/oauth`).
 - Stateless OAuth authorize, connect, token, register and metadata routes: sealed auth request, 60 s code, 1 h access and refresh-until-Nov-15 tokens, with the raw key never placed in a URL (`src/lib/oauth`, `src/app/oauth`, `src/app/connect/actions.ts`).
+- Stateless `/api/mcp` endpoint (SDK v2 `createMcpHandler`, sealed-token auth with 401 resource-metadata challenge, JSON legacy leg for 2025-11-25 clients), tool wrapper with scrubbed errors and key-free logs, server instructions, and `/api/build-info`.
 
 ### Fixed
 - OAuth token endpoint requires `client_id` and `grant_type`, tolerates null or non-object JSON bodies, returns JSON on server errors, and omits refresh tokens past the cutoff; authorize caps key, state and challenge input and redirects against the configured origin; metadata routes answer CORS preflight.
