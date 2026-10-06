@@ -7,6 +7,7 @@ patch for fixes, minor for new tools or pages, major for changes that make atten
 ## [Unreleased]
 
 ### Added
+- Prompts (`whats_on_today`, `plan_my_week`, `host_an_event`) and opt-in pseudonymous PostHog MCP Analytics: no key, arguments or responses are sent (`src/mcp/prompts.ts`, `src/mcp/analytics.ts`).
 - Optional Gemini second-opinion reviewer for hosting and venue proposals, off unless `REVIEWER_MODEL` is set (`src/mcp/propose/reviewer.ts`).
 - Next.js app scaffold, environment helpers, design spec and implementation plan.
 - Sealed JWE artifacts (`src/lib/seal.ts`) with secret rotation, mandatory expiry, pinned algorithms and required access-token audience.

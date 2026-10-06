@@ -4,6 +4,7 @@ import { z } from "zod";
 import { GUIDES } from "@/generated/guides";
 import { seal, unseal } from "@/lib/seal";
 import { type Access, hasScope, WRITE_SCOPES } from "@/lib/types";
+import { captureEvent } from "@/mcp/analytics";
 import type { ContextSection } from "@/mcp/lib/context";
 import { ok } from "@/mcp/lib/result";
 import { ToolError, withToolHandler } from "@/mcp/lib/tool-wrapper";
@@ -81,6 +82,12 @@ export function registerProposeTools(
         const clean = parsed.data as Record<string, unknown>;
         const checks = await runChecks(action, clean, { access, now });
         if (checks.blockers.length) {
+          captureEvent(access, "proposal_created", {
+            action,
+            blocked: true,
+            warnings: 0,
+            reviewer_used: false,
+          });
           return ok(
             `## Not possible as proposed\n${checks.blockers.map((b) => `- ${b}`).join("\n")}\n\nNo proposal code was issued. Tell the attendee why, fix what you can, and propose again.`,
             { blocked: true, blockers: checks.blockers },
