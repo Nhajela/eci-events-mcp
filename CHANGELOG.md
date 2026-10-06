@@ -16,6 +16,7 @@ patch for fixes, minor for new tools or pages, major for changes that make atten
 - Stateless OAuth authorize, connect, token, register and metadata routes: sealed auth request, 60 s code, 1 h access and refresh-until-Nov-15 tokens, with the raw key never placed in a URL (`src/lib/oauth`, `src/app/oauth`, `src/app/connect/actions.ts`).
 
 ### Fixed
+- OAuth token endpoint requires `client_id` and `grant_type`, tolerates null or non-object JSON bodies, returns JSON on server errors, and omits refresh tokens past the cutoff; authorize caps key, state and challenge input and redirects against the configured origin; metadata routes answer CORS preflight.
 - OAuth CIMD fetch is stream-capped at 64 KB, the client cache and redirect URI lists are bounded, and the public-host check also refuses trailing-dot, `.localhost`, CGNAT, benchmark, multicast and credentialed URLs.
 - EdgeOS client throws a typed error for unreadable 2xx bodies, refuses redirects, rejects unsafe paths, and caps Retry-After at 300 seconds.
 - IST time formatting now normalizes narrow non-breaking spaces (U+202F) to regular spaces in all output.

@@ -1,4 +1,4 @@
-import { detectAccess } from "@/lib/edgeos/detect";
+import { type DetectResult, detectAccess } from "@/lib/edgeos/detect";
 import { agenticAccessUrl, mcpUrl, origin } from "@/lib/env";
 import { looksLikeKey, normalizeKey } from "@/lib/scrub";
 import { seal, unseal } from "@/lib/seal";
@@ -60,9 +60,19 @@ export async function startAuthorize(p: URLSearchParams): Promise<StartResult> {
   });
   if (p.get("response_type") !== "code")
     return fail("unsupported_response_type", "Only response_type=code is supported.");
+  if (state !== null && state.length > 500)
+    return {
+      kind: "redirect",
+      location: backToClient(redirectUri, {
+        error: "invalid_request",
+        error_description: "state is too long.",
+      }),
+    };
   const challenge = p.get("code_challenge");
   if (!challenge || p.get("code_challenge_method") !== "S256")
     return fail("invalid_request", "PKCE with S256 is required.");
+  if (!/^[A-Za-z0-9_-]{43}$/.test(challenge))
+    return fail("invalid_request", "code_challenge must be a 43 character S256 value.");
   const resource = p.get("resource");
   if (resource && !sameResource(resource)) return fail("invalid_target", "Unknown resource.");
 
@@ -85,7 +95,7 @@ export async function readAuthRequest(req: string): Promise<AuthRequest | null> 
   return unseal<AuthRequest>("authreq", req);
 }
 
-const REASONS: Record<string, string> = {
+const REASONS: Record<Extract<DetectResult, { ok: false }>["reason"], string> = {
   invalid_key:
     "EdgeOS didn't accept this key. It may be revoked or expired. Make a new one and paste it here.",
   no_events_read: "This key can't read events. Make a new key with “Read events” ticked.",
@@ -101,7 +111,7 @@ export async function completeAuthorize(reqToken: string, rawKey: string): Promi
       status: "error",
       message: "This sign-in link expired. Go back to your app and connect again.",
     };
-  const key = normalizeKey(rawKey);
+  const key = rawKey.length > 200 ? "" : normalizeKey(rawKey);
   if (!looksLikeKey(key)) {
     return {
       status: "error",

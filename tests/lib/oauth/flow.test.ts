@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { POST as tokenPost } from "@/app/oauth/token/route";
 import { completeAuthorize, readAuthRequest, startAuthorize } from "@/lib/oauth/authorize";
 import { registerClient } from "@/lib/oauth/clients";
 import { exchangeToken, parseTokenBody } from "@/lib/oauth/token";
@@ -8,6 +9,8 @@ import { useTestSecrets } from "../../helpers";
 
 // biome-ignore lint/correctness/useHookAtTopLevel: not a React hook; registers vitest beforeEach
 useTestSecrets();
+
+afterEach(() => vi.useRealTimers());
 
 const KEY = "eos_live_AbCdEfGhIjKlMnOpQrStUvWxYz012345";
 const VERIFIER = `${"a".repeat(43)}VerifierVerifier`;
@@ -54,7 +57,7 @@ async function authorizeParams(clientId: string, extra: Record<string, string> =
 async function codeFor(clientId: string, key = KEY) {
   const start = await startAuthorize(await authorizeParams(clientId));
   if (start.kind !== "redirect") throw new Error(start.message);
-  const req = new URL(start.location, "https://mcp.test").searchParams.get("req")!;
+  const req = new URL(start.location, "https://mcp.test").searchParams.get("req") ?? "";
   const done = await completeAuthorize(req, key);
   if (done.status !== "ok") throw new Error(JSON.stringify(done));
   return new URL(done.redirectTo);
@@ -67,7 +70,7 @@ describe("authorization code flow", () => {
     expect(r.kind).toBe("redirect");
     const loc = new URL((r as { location: string }).location, "https://mcp.test");
     expect(loc.pathname).toBe("/connect");
-    const req = await readAuthRequest(loc.searchParams.get("req")!);
+    const req = await readAuthRequest(loc.searchParams.get("req") ?? "");
     expect(req).toMatchObject({ clientName: "claude.ai", redirectUri: REDIRECT, state: "xyz" });
   });
 
@@ -114,10 +117,10 @@ describe("authorization code flow", () => {
   it("explains a rejected key", async () => {
     const id = await dcrClient();
     const start = await startAuthorize(await authorizeParams(id));
-    const req = new URL(
-      (start as { location: string }).location,
-      "https://mcp.test",
-    ).searchParams.get("req")!;
+    const req =
+      new URL((start as { location: string }).location, "https://mcp.test").searchParams.get(
+        "req",
+      ) ?? "";
     const r = await completeAuthorize(req, "eos_live_NotARealKeyNotARealKey00");
     expect(r).toMatchObject({ status: "error" });
     expect((r as { message: string }).message).toContain("didn't accept");
@@ -126,7 +129,7 @@ describe("authorization code flow", () => {
 
   it("exchanges the code once PKCE checks out, and refreshes", async () => {
     const id = await dcrClient();
-    const code = (await codeFor(id)).searchParams.get("code")!;
+    const code = (await codeFor(id)).searchParams.get("code") ?? "";
     const bad = await exchangeToken(
       new URLSearchParams({
         grant_type: "authorization_code",
@@ -172,7 +175,7 @@ describe("authorization code flow", () => {
   it("refuses a code issued to another client", async () => {
     const id = await dcrClient();
     const other = await dcrClient();
-    const code = (await codeFor(id)).searchParams.get("code")!;
+    const code = (await codeFor(id)).searchParams.get("code") ?? "";
     const r = await exchangeToken(
       new URLSearchParams({
         grant_type: "authorization_code",
@@ -198,5 +201,136 @@ describe("authorization code flow", () => {
   it("rejects unsupported grant types", async () => {
     const r = await exchangeToken(new URLSearchParams({ grant_type: "client_credentials" }));
     expect(r.body.error).toBe("unsupported_grant_type");
+  });
+
+  const tokenParams = (o: Record<string, string>) => new URLSearchParams(o);
+  const exchange = async (id: string, over: Record<string, string> = {}) => {
+    const code = (await codeFor(id)).searchParams.get("code") ?? "";
+    return exchangeToken(
+      tokenParams({
+        grant_type: "authorization_code",
+        code,
+        code_verifier: VERIFIER,
+        redirect_uri: REDIRECT,
+        client_id: id,
+        ...over,
+      }),
+    );
+  };
+
+  it("requires client_id on the code grant", async () => {
+    const id = await dcrClient();
+    const code = (await codeFor(id)).searchParams.get("code") ?? "";
+    const r = await exchangeToken(
+      tokenParams({
+        grant_type: "authorization_code",
+        code,
+        code_verifier: VERIFIER,
+        redirect_uri: REDIRECT,
+      }),
+    );
+    expect(r).toMatchObject({ status: 400, body: { error: "invalid_request" } });
+  });
+
+  it("requires client_id on the refresh grant and binds it", async () => {
+    const id = await dcrClient();
+    const other = await dcrClient();
+    const ok = await exchange(id);
+    const refresh_token = ok.body.refresh_token as string;
+    const none = await exchangeToken(tokenParams({ grant_type: "refresh_token", refresh_token }));
+    expect(none.body.error).toBe("invalid_request");
+    const wrong = await exchangeToken(
+      tokenParams({ grant_type: "refresh_token", refresh_token, client_id: other }),
+    );
+    expect(wrong.body.error).toBe("invalid_grant");
+  });
+
+  it("requires grant_type", async () => {
+    expect((await exchangeToken(new URLSearchParams())).body.error).toBe("invalid_request");
+  });
+
+  it("treats a null, array or scalar JSON body as empty", async () => {
+    for (const body of ["null", "[1]", "5"]) {
+      const req = new Request("https://mcp.test/oauth/token", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body,
+      });
+      const params = await parseTokenBody(req);
+      expect([...params.keys()]).toEqual([]);
+      expect((await exchangeToken(params)).body.error).toBe("invalid_request");
+    }
+  });
+
+  it("rejects a redirect_uri mismatch and a resource mismatch at the token endpoint", async () => {
+    const id = await dcrClient();
+    const a = await exchange(id, { redirect_uri: "https://claude.ai/other" });
+    expect(a.body.error).toBe("invalid_grant");
+    const b = await exchange(id, { resource: "https://other/api/mcp" });
+    expect(b.body.error).toBe("invalid_target");
+  });
+
+  it("rejects unsupported_response_type", async () => {
+    const id = await dcrClient();
+    const r = await startAuthorize(await authorizeParams(id, { response_type: "token" }));
+    const loc = new URL((r as { location: string }).location);
+    expect(loc.searchParams.get("error")).toBe("unsupported_response_type");
+  });
+
+  it("rejects a garbage code and an expired code", async () => {
+    const id = await dcrClient();
+    const garbage = await exchange(id, { code: "garbage" });
+    expect(garbage.body.error).toBe("invalid_grant");
+    vi.useFakeTimers();
+    try {
+      const code = (await codeFor(id)).searchParams.get("code") ?? "";
+      vi.setSystemTime(Date.now() + 120_000);
+      const r = await exchangeToken(
+        tokenParams({
+          grant_type: "authorization_code",
+          code,
+          code_verifier: VERIFIER,
+          redirect_uri: REDIRECT,
+          client_id: id,
+        }),
+      );
+      expect(r.body.error).toBe("invalid_grant");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("caps key length, challenge shape and state length", async () => {
+    const id = await dcrClient();
+    const start = await startAuthorize(await authorizeParams(id));
+    const req =
+      new URL((start as { location: string }).location, "https://mcp.test").searchParams.get(
+        "req",
+      ) ?? "";
+    const long = await completeAuthorize(req, `eos_live_${"a".repeat(300)}`);
+    expect((long as { message: string }).message).toContain("doesn't look like an EdgeOS key");
+    const badChallenge = await startAuthorize(
+      await authorizeParams(id, { code_challenge: "short" }),
+    );
+    expect(new URL((badChallenge as { location: string }).location).searchParams.get("error")).toBe(
+      "invalid_request",
+    );
+    const badState = await startAuthorize(await authorizeParams(id, { state: "s".repeat(501) }));
+    expect(new URL((badState as { location: string }).location).searchParams.get("error")).toBe(
+      "invalid_request",
+    );
+  });
+
+  it("token route sets no-store and CORS headers", async () => {
+    const res = await tokenPost(
+      new Request("https://mcp.test/oauth/token", {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: "grant_type=client_credentials",
+      }),
+    );
+    expect(res.status).toBe(400);
+    expect(res.headers.get("cache-control")).toBe("no-store");
+    expect(res.headers.get("access-control-allow-origin")).toBe("*");
   });
 });

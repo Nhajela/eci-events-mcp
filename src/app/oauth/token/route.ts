@@ -3,8 +3,15 @@ import { exchangeToken, parseTokenBody } from "@/lib/oauth/token";
 const headers = { "Cache-Control": "no-store", "Access-Control-Allow-Origin": "*" };
 
 export async function POST(request: Request) {
-  const r = await exchangeToken(await parseTokenBody(request));
-  return Response.json(r.body, { status: r.status, headers });
+  try {
+    const r = await exchangeToken(await parseTokenBody(request));
+    return Response.json(r.body, { status: r.status, headers });
+  } catch {
+    return Response.json(
+      { error: "server_error", error_description: "Something went wrong." },
+      { status: 500, headers },
+    );
+  }
 }
 
 export function OPTIONS() {
