@@ -22,6 +22,16 @@ Optional features turn on only when their variables are set:
 - Analytics runs only when `POSTHOG_PROJECT_TOKEN` and `POSTHOG_ID_SALT` are both set.
 - The proposal reviewer runs only when `REVIEWER_MODEL`, `GOOGLE_CLOUD_PROJECT` and `GEMINI_API_KEY` are all set.
 
+## First deploy
+
+1. Set `PUBLIC_ORIGIN` to the final site URL, no trailing slash. It is baked in at build time, so changing the domain needs a rebuild.
+2. Set `TOKEN_SECRETS` with `pnpm -s secret:new` (see Operate below); never paste it into a chat or a file in the repo.
+3. Optional analytics: `POSTHOG_PROJECT_TOKEN`, `POSTHOG_ID_SALT` and `POSTHOG_HOST`, then turn on "Discard client IP data" in the PostHog project settings. Web page analytics: `NEXT_PUBLIC_POSTHOG_KEY` and `NEXT_PUBLIC_POSTHOG_HOST`.
+4. Optional reviewer: `REVIEWER_MODEL`, `GOOGLE_CLOUD_PROJECT`, `GEMINI_API_KEY`.
+5. For the trust page's "Where this runs": `HOST_NAME` and `DEPLOY_METHOD`. When not on Vercel, also set `GIT_COMMIT_SHA` at build time so the running commit is shown.
+6. `EDGEOS_API_BASE` and `EDGEOS_PORTAL_URL` are ignored in production; leave them unset.
+7. Smoke test without any AI client: put a test key in `.env.local` as `EDGEOS_TEST_KEY` (not on the command line, where it lands in shell history), then run `pnpm smoke`.
+
 ## Operate
 
 - `pnpm secret:new --vercel production` sets TOKEN_SECRETS without printing it. Rotating it signs every attendee out.
