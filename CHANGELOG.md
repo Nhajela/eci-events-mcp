@@ -6,6 +6,9 @@ patch for fixes, minor for new tools or pages, major for changes that make atten
 
 ## [Unreleased]
 
+### Changed
+- Landing page redesigned for clarity: one message per block, the two setup paths in the hero, one action per tutorial slide with a goal and progress bar, and details behind "More help".
+
 ### Added
 - Landing page is now a two-path setup guide: "I'm new to this" step-by-step slides for Claude and ChatGPT with real claude.ai screenshots, or "I know MCP servers" with the URL, auth details and config snippets. The end goal is shown on every slide.
 - Agent setup guide at /connect.md and /agents/connect.md: paste the link to an AI agent and it can add the server (Claude Code, JSON clients, Codex) or walk you through claude.ai and ChatGPT.

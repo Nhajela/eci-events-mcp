@@ -1,23 +1,20 @@
-import { GoalLine } from "./setup/parts";
-
-// Landing page sections above the setup steps: who built this, what it is
-// for, what you can do with it, and what we track.
+// Landing page blocks. Each block carries one message; detail sits behind a
+// "More" toggle or on /trust and /how-it-works.
 
 export function CommunityDisclaimer() {
   return (
     <div
       role="note"
-      className="border-b border-amber-300 bg-amber-100 px-4 py-3 text-amber-950 sm:px-6"
+      className="border-b border-amber-300 bg-amber-100 px-4 py-2.5 text-amber-950 sm:px-6"
     >
-      <p className="mx-auto max-w-5xl text-sm sm:text-base">
+      <p className="mx-auto max-w-5xl text-sm">
         <b>Community-built, not an official Edge City app.</b> Made by{" "}
         <a className="font-medium underline" href="https://t.me/HiiNaman">
           @HiiNaman
-        </a>{" "}
-        on Telegram. Your EdgeOS key is never stored and your AI never sees it, so your key and your
-        account stay protected.{" "}
+        </a>
+        . Your key is never stored.{" "}
         <a className="font-medium underline" href="/trust">
-          How we keep it safe
+          Why it's safe
         </a>
       </p>
     </div>
@@ -71,32 +68,20 @@ export function ChatIllustration() {
   );
 }
 
-export function Hero() {
+/** Left side of the hero; the path buttons are added by SetupPaths. */
+export function HeroText() {
   return (
-    <section className="grid items-center gap-8 md:grid-cols-[1.1fr_1fr]">
-      <div className="min-w-0">
-        <p className="text-sm font-medium uppercase tracking-wider text-teal-800">
-          Edge City India · 11 Oct – 1 Nov 2026 · Mandrem, Goa
-        </p>
-        <h1 className="mt-3 font-display text-4xl font-bold sm:text-5xl">
-          Use your own Claude or ChatGPT for Edge City events
-        </h1>
-        <p className="mt-4 text-lg text-neutral-700">
-          Ask about the village calendar in plain words. Find what's on, RSVP, plan your week and
-          host your own events, from the AI app you already use.
-        </p>
-        <div className="mt-5">
-          <GoalLine />
-        </div>
-        <a
-          href="#setup"
-          className="mt-6 inline-block rounded-lg bg-teal-700 px-5 py-3 font-medium text-white hover:bg-teal-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
-        >
-          Get set up
-        </a>
-      </div>
-      <ChatIllustration />
-    </section>
+    <>
+      <p className="text-sm font-medium uppercase tracking-wider text-teal-800">
+        Edge City India · 11 Oct – 1 Nov · Goa
+      </p>
+      <h1 className="mt-3 font-display text-4xl font-bold leading-tight sm:text-5xl">
+        Use your own Claude or ChatGPT for Edge City events
+      </h1>
+      <p className="mt-4 text-lg text-neutral-700">
+        Your AI finds what's on at Edge City and RSVPs for you, after you say yes.
+      </p>
+    </>
   );
 }
 
@@ -108,44 +93,28 @@ const ICONS = {
   plus: "M12 5v14M5 12h14",
 } as const;
 
-const USE_CASES: { icon: keyof typeof ICONS; title: string; text: string; prompt: string }[] = [
-  {
-    icon: "calendar",
-    title: "See what's on",
-    text: "Today's or this week's events in India time, with venues and who's hosting.",
-    prompt: "What's happening this afternoon?",
-  },
+const USE_CASES: { icon: keyof typeof ICONS; title: string; prompt: string }[] = [
+  { icon: "calendar", title: "See what's on", prompt: "What's happening this afternoon?" },
   {
     icon: "check",
     title: "RSVP without the portal",
-    text: "Your AI shows you exactly what it will do and asks before every RSVP.",
     prompt: "RSVP me to the AI salon on Thursday.",
   },
-  {
-    icon: "list",
-    title: "Plan your week",
-    text: "Pick events around what you've already RSVPed to, without clashes.",
-    prompt: "Fill my week with music and wellness, no clashes.",
-  },
-  {
-    icon: "plus",
-    title: "Host an event",
-    text: "Draft it with your AI. It checks the venue is free before anything is created.",
-    prompt: "Help me host a sunrise swim on Saturday.",
-  },
+  { icon: "list", title: "Plan your week", prompt: "Fill my week with music, no clashes." },
+  { icon: "plus", title: "Host an event", prompt: "Help me host a sunrise swim on Saturday." },
 ];
 
 export function UseCases() {
   return (
-    <section className="mt-14">
-      <h2 className="font-display text-2xl font-semibold">What you can do</h2>
-      <ul className="mt-6 grid gap-4 sm:grid-cols-2">
+    <section className="mt-20">
+      <h2 className="font-display text-3xl font-semibold">What you can do</h2>
+      <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {USE_CASES.map((u) => (
-          <li key={u.title} className="flex min-w-0 gap-4 rounded-xl border border-neutral-200 p-5">
+          <li key={u.title} className="min-w-0 rounded-xl border border-neutral-200 p-5">
             <svg
               aria-hidden="true"
               viewBox="0 0 24 24"
-              className="h-6 w-6 shrink-0 text-teal-700"
+              className="h-7 w-7 text-teal-700"
               fill="none"
               stroke="currentColor"
               strokeWidth="2"
@@ -154,11 +123,8 @@ export function UseCases() {
             >
               <path d={ICONS[u.icon]} />
             </svg>
-            <div className="min-w-0">
-              <h3 className="font-display text-lg font-semibold">{u.title}</h3>
-              <p className="mt-1 text-neutral-700">{u.text}</p>
-              <p className="mt-2 text-sm italic text-neutral-600">“{u.prompt}”</p>
-            </div>
+            <h3 className="mt-3 font-display text-lg font-semibold">{u.title}</h3>
+            <p className="mt-1 text-sm italic text-neutral-600">“{u.prompt}”</p>
           </li>
         ))}
       </ul>
@@ -166,19 +132,88 @@ export function UseCases() {
   );
 }
 
-export function TrackingNote() {
+function Fact({
+  title,
+  children,
+  more,
+}: {
+  title: string;
+  children: React.ReactNode;
+  more: React.ReactNode;
+}) {
   return (
-    <section className="mt-6 rounded-xl border border-neutral-200 bg-neutral-50 p-5">
-      <h2 className="font-display text-xl font-semibold">What we track</h2>
-      <p className="mt-2 text-neutral-700">
-        Only usage counts, so we know how many people use this, and errors, so we can fix what
-        breaks. It's anonymous: each connection gets a scrambled id that can't be turned back into
-        your key, your name or your account. We never keep your key, so we can't tell who you are,
-        and we don't record what you ask or the details of events.{" "}
-        <a className="font-medium text-teal-800 underline" href="/trust">
-          Full list of what's measured
-        </a>
-      </p>
+    <div className="min-w-0 rounded-xl border border-neutral-200 p-5">
+      <h3 className="font-display text-lg font-semibold">{title}</h3>
+      <p className="mt-1 text-neutral-700">{children}</p>
+      <details className="mt-3">
+        <summary className="cursor-pointer text-sm font-medium text-teal-800 underline">
+          More
+        </summary>
+        <div className="mt-2 space-y-2 text-sm text-neutral-700">{more}</div>
+      </details>
+    </div>
+  );
+}
+
+export function TrustFacts() {
+  return (
+    <section className="mt-20">
+      <h2 className="font-display text-3xl font-semibold">Why it's safe</h2>
+      <div className="mt-6 grid gap-4 md:grid-cols-3">
+        <Fact
+          title="Your key is never stored"
+          more={
+            <>
+              <p>
+                It travels locked inside a token only this server can open, and only for the moment
+                it's needed. Your AI never sees it.
+              </p>
+              <a className="font-medium text-teal-800 underline" href="/trust">
+                How this works, in detail
+              </a>
+            </>
+          }
+        >
+          Locked away from us and from your AI.
+        </Fact>
+        <Fact
+          title="Open source"
+          more={
+            <>
+              <p>The code is public on GitHub, and the page shows exactly which version is live.</p>
+              <a className="font-medium text-teal-800 underline" href="/trust#where">
+                See the running version
+              </a>
+              <p>
+                <a className="font-medium text-teal-800 underline" href="/how-it-works">
+                  I don't know how this works
+                </a>{" "}
+                shows everything we tell your AI.
+              </p>
+            </>
+          }
+        >
+          Anyone can check the code that runs.
+        </Fact>
+        <Fact
+          title="What we track"
+          more={
+            <>
+              <p>
+                Only usage counts, so we know how many people use this, and errors, so we can fix
+                what breaks. It's anonymous: each connection gets a scrambled id that can't be
+                turned back into your key, your name or your account. We never keep your key, so we
+                can't tell who you are, and we don't record what you ask or the details of events.
+              </p>
+              <a className="font-medium text-teal-800 underline" href="/trust">
+                Full list of what's measured
+              </a>
+            </>
+          }
+        >
+          Anonymous usage counts and errors. Nothing you ask.
+        </Fact>
+      </div>
     </section>
   );
 }

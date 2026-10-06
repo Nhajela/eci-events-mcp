@@ -53,25 +53,25 @@ describe("pages", () => {
     expect(html).toContain("We never keep your key");
   });
 
-  it("landing offers two paths and keeps the goal in view", async () => {
+  it("landing offers two paths and chunks each step", async () => {
     const { default: Home } = await import("@/app/page");
     const html = renderToStaticMarkup(await Home());
-    expect(html).toContain("I know MCP servers");
+    expect(html).toContain("I know MCP servers →");
     expect(html).toContain("I&#x27;m new to this, walk me through it");
-    // goal line appears in the hero and on every tutorial slide
-    const goals = html.split("can talk to Edge City&#x27;s events system").length - 1;
-    expect(goals).toBeGreaterThanOrEqual(8);
+    expect(html).toContain("your Claude can see Edge City events");
     for (const t of [
-      "What you&#x27;ll get",
+      "Edge City events, inside Claude",
       "Make your Edge City key",
       "Open Customize → Connectors",
       "Paste the name and link",
-      "Press Connect and paste your key",
+      "Connect your key",
       "Turn it on in a chat",
-      "Try it",
+      "Ask away",
     ])
       expect(html).toContain(t);
-    expect(html).toContain("Step 3 of 7");
+    expect(html).toContain("Step 1 of 7");
+    // detail is behind progressive disclosure
+    expect(html.split("More help").length - 1).toBeGreaterThanOrEqual(8);
     expect(html).toContain("claude-add-custom-connector.png");
     expect(html).toContain("Add custom MCP server");
     expect(html).toContain("claude mcp add --transport http eci-events");

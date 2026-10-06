@@ -5,49 +5,73 @@ import { track } from "@/components/analytics";
 
 type Path = "techy" | "new";
 
-/** Two big choices; both panels are rendered, the unchosen one is hidden. */
+/**
+ * The hero plus its two choices. The beginner guide shows by default; the
+ * techy card replaces it when chosen. Both are rendered (one hidden) so the
+ * page works without JavaScript.
+ */
 export function SetupPaths({
+  hero,
+  visual,
   techy,
   beginner,
 }: {
+  hero: React.ReactNode;
+  visual: React.ReactNode;
   techy: React.ReactNode;
   beginner: React.ReactNode;
 }) {
-  const [path, setPath] = useState<Path | null>(null);
+  const [path, setPath] = useState<Path>("new");
   const choose = (p: Path) => {
     setPath(p);
     track("setup_path_selected", { path: p });
+    document.getElementById("setup")?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
-  const btn = (p: Path, title: string, sub: string) => (
-    <button
-      type="button"
-      onClick={() => choose(p)}
-      aria-pressed={path === p}
-      aria-controls={`setup-${p}`}
-      className={`flex min-w-0 flex-col items-start rounded-2xl border-2 p-5 text-left transition focus-visible:outline-2 focus-visible:outline-teal-700 ${
-        path === p ? "border-teal-700 bg-teal-50" : "border-neutral-200 hover:border-teal-600"
-      }`}
-    >
-      <span className="font-display text-xl font-semibold">{title}</span>
-      <span className="mt-1 text-neutral-700">{sub}</span>
-    </button>
-  );
   return (
-    <div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        {btn(
-          "new",
-          "I'm new to this, walk me through it",
-          "Step by step, with pictures. About 3 minutes.",
-        )}
-        {btn("techy", "I know MCP servers", "Just the URL, auth details and config snippets.")}
-      </div>
-      <div id="setup-new" hidden={path !== "new" && path !== null} className="mt-8">
-        {beginner}
-      </div>
-      <div id="setup-techy" hidden={path !== "techy"} className="mt-8">
-        {techy}
-      </div>
-    </div>
+    <>
+      <section className="grid items-center gap-10 md:grid-cols-[1.1fr_1fr]">
+        <div className="min-w-0">
+          {hero}
+          <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-2">
+            <button
+              type="button"
+              onClick={() => choose("new")}
+              aria-controls="setup-new"
+              className="rounded-lg bg-teal-700 px-6 py-3 text-lg font-medium text-white hover:bg-teal-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700"
+            >
+              I'm new to this, walk me through it
+            </button>
+            <button
+              type="button"
+              onClick={() => choose("techy")}
+              aria-controls="setup-techy"
+              className="px-2 py-3 text-lg font-medium text-teal-800 underline underline-offset-4 hover:text-teal-950"
+            >
+              I know MCP servers →
+            </button>
+          </div>
+        </div>
+        <div className="min-w-0">{visual}</div>
+      </section>
+
+      <section id="setup" className="mt-20 scroll-mt-6">
+        <h2 className="font-display text-3xl font-semibold">
+          {path === "new" ? "Set it up in 7 steps" : "Quick setup"}
+        </h2>
+        <div id="setup-new" hidden={path !== "new"} className="mt-6">
+          {beginner}
+        </div>
+        <div id="setup-techy" hidden={path !== "techy"} className="mt-6">
+          {techy}
+          <button
+            type="button"
+            onClick={() => choose("new")}
+            className="mt-4 text-sm font-medium text-teal-800 underline"
+          >
+            Prefer the step-by-step guide?
+          </button>
+        </div>
+      </section>
+    </>
   );
 }

@@ -3,18 +3,6 @@
 import Image from "next/image";
 import { CopyButton } from "@/components/copy-button";
 
-export const GOAL =
-  "can talk to Edge City's events system (EdgeOS): find events, see what's on, and RSVP for you after you say yes.";
-
-/** The one-line end goal, repeated on the page and on every tutorial slide. */
-export function GoalLine({ who = "your Claude or ChatGPT" }: { who?: string }) {
-  return (
-    <p className="rounded-lg bg-teal-50 px-4 py-2 text-teal-900">
-      <b>The goal:</b> {who} {GOAL}
-    </p>
-  );
-}
-
 export function CopyBox({ label, value }: { label?: string; value: string }) {
   return (
     <div className="min-w-0">
@@ -44,6 +32,7 @@ export function Shot({
       alt={alt}
       width={width}
       height={height}
+      loading="eager"
       className="h-auto w-full max-w-xl rounded-lg border border-neutral-300 bg-neutral-900"
     />
   );
