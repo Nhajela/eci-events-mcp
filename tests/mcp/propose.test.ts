@@ -89,6 +89,8 @@ describe("propose → confirm", () => {
       }),
     );
     expect(t).toContain("Not possible as proposed");
+    expect(t).toContain("## Guideline");
+    expect(t).toContain("# RSVPs");
     expect(t).not.toContain("Proposal code");
   });
 

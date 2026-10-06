@@ -99,7 +99,7 @@ export function registerProposeTools(
             reviewer_used: false,
           });
           return ok(
-            `## Not possible as proposed\n${checks.blockers.map((b) => `- ${b}`).join("\n")}\n\nNo proposal code was issued. Tell the attendee why, fix what you can, and propose again.`,
+            `## Not possible as proposed\n${checks.blockers.map((b) => `- ${b}`).join("\n")}\n\nNo proposal code was issued. Tell the attendee why, fix what you can, and propose again.\n\n## Guideline\n${GUIDES[def.guide]}`,
             { blocked: true, blockers: checks.blockers },
           );
         }
