@@ -7,6 +7,7 @@ patch for fixes, minor for new tools or pages, major for changes that make atten
 ## [Unreleased]
 
 ### Added
+- "I don't know how this works" page showing every instruction, tool definition, prompt and guide the AI receives, at three levels of detail.
 - Ops scripts (`pnpm secret:new` generates and hands over `TOKEN_SECRETS` without printing it; `pnpm smoke` checks a real key against EdgeOS), CI workflow, daily EdgeOS spec-drift workflow and README.
 - Landing guide, four-level trust page and key connect form showing where the attendee is sent back (`src/app/page.tsx`, `src/app/trust`, `src/app/connect`).
 - Shared web components (tabs, copy button, Mermaid, build box, cookie-free web analytics) and site fonts (`src/components`, `src/app/layout.tsx`).

@@ -179,6 +179,13 @@ export default async function Home() {
           </a>
         </div>
       </section>
+
+      <p className="mt-8 text-neutral-700">
+        Want to see exactly what your AI is told?{" "}
+        <a className="font-medium text-teal-800 underline" href="/how-it-works">
+          I don't know how this works
+        </a>
+      </p>
     </main>
   );
 }

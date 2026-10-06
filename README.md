@@ -6,6 +6,7 @@ Community project, not run by Edge City.
 
 - **Connect:** add `<PUBLIC_ORIGIN>/api/mcp` as a custom connector (your deployed site URL + `/api/mcp`). No token in the URL; you paste your EdgeOS key once on our connect page.
 - **Safety:** your key is never stored. See `/trust` on the live site and `docs/superpowers/specs/2026-10-06-eci-events-mcp-design.md`.
+- **What the AI is told:** every instruction, tool and prompt is shown at `/how-it-works` on the live site.
 
 ## Develop
 

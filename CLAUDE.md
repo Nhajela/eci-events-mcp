@@ -9,3 +9,4 @@ Stateless MCP server for Edge City India attendees. Spec: docs/superpowers/specs
 - Times shown to models are IST via `src/lib/time.ts`.
 - Atomic commits; every feat/fix adds a line to CHANGELOG.md under Unreleased.
 - Any text sent to a model must be an exported constant so /how-it-works can show it.
+- When you add or change a proposal check in checks.ts, update src/mcp/propose/check-list.ts.

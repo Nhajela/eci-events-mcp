@@ -15,6 +15,13 @@ export default async function Trust() {
         Your EdgeOS key lets an AI act as you on the Edge City calendar. Here's exactly what happens
         to it, at whatever depth you like.
       </p>
+      <p className="mt-2 text-neutral-700">
+        Every instruction we give the AI is public on{" "}
+        <a className="underline" href="/how-it-works">
+          How it works
+        </a>
+        .
+      </p>
       <div className="mt-8">
         <Tabs
           tabs={[
