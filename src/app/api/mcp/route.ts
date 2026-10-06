@@ -7,6 +7,7 @@ import {
 import { after } from "next/server";
 import { origin } from "@/lib/env";
 import type { Access } from "@/lib/types";
+import { flushAnalytics } from "@/mcp/analytics";
 import { resolveAccess } from "@/mcp/lib/auth";
 import { buildServer } from "@/mcp/server";
 
@@ -15,10 +16,17 @@ import { buildServer } from "@/mcp/server";
 // handshake, 2025-11-25) are routed with isLegacyRequest to a per-request
 // transport with enableJsonResponse, because the SDK's built-in legacy
 // fallback always answers with SSE and offers no way to ask for JSON.
-const handler = createMcpHandler(({ authInfo }) => buildServer(authInfo?.extra?.access as Access), {
-  legacy: "reject",
-  responseMode: "json",
-});
+const handler = createMcpHandler(
+  ({ authInfo }) => {
+    const access = authInfo?.extra?.access as Access | undefined;
+    if (!access) throw new Error("MCP handler invoked without authInfo.extra.access");
+    return buildServer(access);
+  },
+  {
+    legacy: "reject",
+    responseMode: "json",
+  },
+);
 
 async function serveLegacy(
   request: Request,
@@ -30,8 +38,13 @@ async function serveLegacy(
     sessionIdGenerator: undefined,
     enableJsonResponse: true,
   });
-  await server.connect(transport);
-  return transport.handleRequest(request, { authInfo });
+  try {
+    await server.connect(transport);
+    // enableJsonResponse: the body is fully built before handleRequest resolves.
+    return await transport.handleRequest(request, { authInfo });
+  } finally {
+    await server.close().catch(() => {});
+  }
 }
 
 function unauthorized(): Response {
@@ -61,14 +74,7 @@ export async function POST(request: Request): Promise<Response> {
   const res = (await isLegacyRequest(request))
     ? await serveLegacy(request, authInfo, access)
     : await handler.fetch(request, { authInfo });
-  after(async () => {
-    // @/mcp/analytics lands in Task 13; until then the fallback keeps this a no-op.
-    // @ts-expect-error module does not exist yet
-    const { flushAnalytics } = await import("@/mcp/analytics").catch(() => ({
-      flushAnalytics: async () => {},
-    }));
-    await flushAnalytics();
-  });
+  after(flushAnalytics);
   return res;
 }
 

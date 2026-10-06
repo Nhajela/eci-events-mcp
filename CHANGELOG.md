@@ -17,6 +17,8 @@ patch for fixes, minor for new tools or pages, major for changes that make atten
 - Stateless `/api/mcp` endpoint (SDK v2 `createMcpHandler`, sealed-token auth with 401 resource-metadata challenge, JSON legacy leg for 2025-11-25 clients), tool wrapper with scrubbed errors and key-free logs, server instructions, and `/api/build-info`.
 
 ### Fixed
+- MCP endpoint: analytics stub so `next build` passes, real wrong-audience test, string-only scope check, and the legacy leg closes its per-request server.
+- MCP endpoint: analytics stub so `next build` passes, real wrong-audience test, string-only scope check, and the legacy leg closes its per-request server.
 - OAuth token endpoint requires `client_id` and `grant_type`, tolerates null or non-object JSON bodies, returns JSON on server errors, and omits refresh tokens past the cutoff; authorize caps key, state and challenge input and redirects against the configured origin; metadata routes answer CORS preflight.
 - OAuth CIMD fetch is stream-capped at 64 KB, the client cache and redirect URI lists are bounded, and the public-host check also refuses trailing-dot, `.localhost`, CGNAT, benchmark, multicast and credentialed URLs.
 - EdgeOS client throws a typed error for unreadable 2xx bodies, refuses redirects, rejects unsafe paths, and caps Retry-After at 300 seconds.

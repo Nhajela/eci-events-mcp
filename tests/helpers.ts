@@ -1,5 +1,7 @@
 import { base64url } from "jose";
 import { beforeEach } from "vitest";
+import { seal } from "@/lib/seal";
+import type { Access } from "@/lib/types";
 
 export function newSecret(): string {
   return base64url.encode(crypto.getRandomValues(new Uint8Array(32)));
@@ -13,9 +15,6 @@ export function useTestSecrets() {
   });
   return secrets;
 }
-
-import { seal } from "@/lib/seal";
-import type { Access } from "@/lib/types";
 
 export const TEST_ACCESS: Access = {
   key: "eos_live_AbCdEfGhIjKlMnOpQrStUvWxYz012345",

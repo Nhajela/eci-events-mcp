@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { accessToken, newSecret, useTestSecrets } from "../helpers";
+import { accessToken, newSecret, TEST_ACCESS, useTestSecrets } from "../helpers";
 import { connectClient } from "../mcp-client";
 
 // biome-ignore lint/correctness/useHookAtTopLevel: test helper registering beforeEach
@@ -42,11 +42,10 @@ describe("/api/mcp", () => {
 
   it("rejects a token minted for another audience", async () => {
     const { seal } = await import("@/lib/seal");
-    const token = await seal(
-      "access",
-      { key: "k", scopes: [], popup: {} },
-      { ttlSeconds: 60, audience: "https://other/api/mcp" },
-    );
+    const token = await seal("access", TEST_ACCESS, {
+      ttlSeconds: 60,
+      audience: "https://other/api/mcp",
+    });
     const res = await post(
       { authorization: `Bearer ${token}` },
       { jsonrpc: "2.0", id: 1, method: "tools/list" },
