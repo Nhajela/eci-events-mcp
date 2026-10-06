@@ -19,6 +19,7 @@ patch for fixes, minor for new tools or pages, major for changes that make atten
 - Model-facing guides for schedule, recurring events, RSVPs, hosting, venues and limits (`guides/*.md`).
 - Filtered EdgeOS OpenAPI snapshot with generated route reference and guides modules (`spec/edgeos-openapi.json`, `src/generated`).
 - `edgeos_initialize` gateway, `edgeos_guide` and scope-gated read tools (events, participants, tracks, venues, eligibility) with IST output (`src/mcp`).
+- Propose/confirm pipeline: `edgeos_propose` runs live checks and issues a 10-minute sealed proposal code; `edgeos_confirm` carries out exactly that action.
 
 ### Fixed
 - MCP endpoint: analytics stub so `next build` passes, real wrong-audience test, string-only scope check, and the legacy leg closes its per-request server.
