@@ -7,7 +7,7 @@ export default async function Trust() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
       <Analytics page="trust" />
-      <a className="text-sm text-teal-800 underline" href="/">
+      <a className="text-sm text-teal-800 underline" href="/setup">
         ← Connect guide
       </a>
       <h1 className="mt-4 font-display text-4xl font-bold">How is this safe?</h1>

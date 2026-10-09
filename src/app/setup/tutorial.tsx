@@ -16,7 +16,29 @@ export type Slide = {
   more?: React.ReactNode;
 };
 
-export function Tutorial({ app, goal, slides }: { app: string; goal: string; slides: Slide[] }) {
+/** Points people on the wrong app's steps to the other tab (Tabs follows the hash). */
+function SwitchLink({ other }: { other: { id: string; name: string } }) {
+  return (
+    <a
+      href={`#${other.id}`}
+      className="inline-flex items-center gap-1.5 rounded-full border border-teal-900/30 bg-white px-3 py-1 text-sm font-medium text-teal-900 hover:border-teal-900"
+    >
+      You use {other.name}? Click here
+    </a>
+  );
+}
+
+export function Tutorial({
+  app,
+  goal,
+  slides,
+  other,
+}: {
+  app: string;
+  goal: string;
+  slides: Slide[];
+  other: { id: string; name: string };
+}) {
   const [i, setI] = useState(0);
   const go = (n: number) => {
     setI(n);
@@ -30,8 +52,11 @@ export function Tutorial({ app, goal, slides }: { app: string; goal: string; sli
           <span className="text-teal-900">
             <b>Goal:</b> {goal}
           </span>
-          <span className="font-medium text-neutral-600">
-            Step {i + 1} of {slides.length}
+          <span className="flex flex-wrap items-center gap-3">
+            <SwitchLink other={other} />
+            <span className="font-medium text-neutral-600">
+              Step {i + 1} of {slides.length}
+            </span>
           </span>
         </div>
         <div className="mt-2 h-1.5 rounded-full bg-neutral-200" aria-hidden="true">
@@ -80,6 +105,12 @@ export function Tutorial({ app, goal, slides }: { app: string; goal: string; sli
         >
           ← Back
         </button>
+        <a
+          href={`#${other.id}`}
+          className="hidden text-sm font-medium text-teal-800 underline sm:inline"
+        >
+          Not on {app === "claude" ? "Claude" : "ChatGPT"}? See the {other.name} steps
+        </a>
         {i < slides.length - 1 ? (
           <button
             type="button"

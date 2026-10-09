@@ -5,6 +5,17 @@
 import { agenticAccessUrl, mcpUrl, origin } from "@/lib/env";
 import { SITE_NAME } from "@/lib/site";
 
+/** What people paste into any other AI agent so it works out the setup for its own app. */
+export function agentSetupPrompt(): string {
+  return `Help me connect you to the Edge City India events MCP server, so you can find Edge City events for me, RSVP and host events.
+
+1. Read the setup guide: ${origin()}/connect.md
+2. Work out how the app I'm using you in adds a remote MCP server (Streamable HTTP, OAuth sign-in). If you're not sure, search that app's current docs.
+3. If you can add it yourself, do it and tell me when to sign in. If you can't, give me short numbered steps for my exact app, with the server URL to paste.
+
+Never ask me to paste my EdgeOS key into this chat. I'll paste it only on the page that opens when I sign in.`;
+}
+
 export function agentGuide(): string {
   const url = mcpUrl();
   return `# ${SITE_NAME}: setup guide for AI agents
@@ -62,7 +73,7 @@ You can't add connectors there yourself. Walk the user through it:
 
 **ChatGPT:** Plugins → + → Add custom MCP server. Name: "Edge City events". URL: \`${url}\`. Choose OAuth, accept the warning ("I understand and want to continue"), create it, sign in and paste the key on the page that opens. In a chat, type @ and pick it. On some plans this needs developer mode: Settings → Apps → Advanced settings.
 
-Step-by-step pictures: ${origin()}/
+Step-by-step pictures: ${origin()}/setup
 
 ## Once connected
 

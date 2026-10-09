@@ -10,7 +10,7 @@ export default async function HowItWorks() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
       <Analytics page="how_it_works" />
-      <a className="text-sm text-teal-800 underline" href="/">
+      <a className="text-sm text-teal-800 underline" href="/setup">
         ← Connect guide
       </a>
       <h1 className="mt-4 font-display text-4xl font-bold">I don't know how this works</h1>

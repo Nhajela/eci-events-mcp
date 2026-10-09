@@ -1,3 +1,4 @@
+import { agentSetupPrompt } from "@/app/api/agent-guide/route";
 import { Mermaid } from "@/components/mermaid";
 import { GUIDES } from "@/generated/guides";
 import { SPEC_VERSION } from "@/generated/reference";
@@ -188,6 +189,9 @@ export function Technical({
 
       <H>Server instructions (sent on connect)</H>
       <Pre>{SERVER_INSTRUCTIONS}</Pre>
+
+      <H>Setup prompt people paste into other AI agents (from /setup)</H>
+      <Pre>{agentSetupPrompt()}</Pre>
 
       <H>
         <code>edgeos_initialize</code> output for a sample attendee with every scope, at{" "}

@@ -12,3 +12,11 @@ h2,
 h3 {
   text-wrap: balance;
 }
+
+/* hero chat: bubbles arrive one by one when a demo is picked */
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}

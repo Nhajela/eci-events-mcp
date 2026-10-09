@@ -231,12 +231,12 @@ export function Verify() {
         attendee lists) to a second AI model to check it against our guidelines.
       </p>
       <p>
-        <b>Web pages:</b> these pages send landing_viewed, trust_viewed, how_it_works_viewed,
-        connect_viewed, setup_path_selected (new or techy), client_tab_selected (which app guide you
-        opened), tutorial_step_viewed (which step number), connect_started, key_accepted (your key's
-        scopes) and key_rejected (a short reason such as invalid_key). Page URLs are sent with query
-        strings and fragments stripped. No cookies (memory only), no session recordings, no
-        heatmaps, no autocapture.
+        <b>Web pages:</b> these pages send landing_viewed, setup_viewed, trust_viewed,
+        how_it_works_viewed, connect_viewed, client_tab_selected (which app guide you opened),
+        tutorial_step_viewed (which step number), connect_started, key_accepted (your key's scopes)
+        and key_rejected (a short reason such as invalid_key). Page URLs are sent with query strings
+        and fragments stripped. No cookies (memory only), no session recordings, no heatmaps, no
+        autocapture.
       </p>
     </div>
   );

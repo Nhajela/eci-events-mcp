@@ -12,70 +12,60 @@ vi.mock("next/font/google", () => ({
 }));
 
 describe("pages", () => {
-  it("landing shows the MCP URL and both app guides", async () => {
-    const { default: Home } = await import("@/app/page");
-    const html = renderToStaticMarkup(await Home());
-    expect(html).toContain("https://mcp.test/api/mcp");
-    expect(html).toContain("claude.ai");
-    expect(html).toContain("ChatGPT");
-    expect(html).toContain("/portal/agentic-access");
-    expect(html).toContain("Never paste your key into a chat");
-  });
-
-  it("claude.ai steps match the current Customize > Connectors flow", async () => {
-    const { default: Home } = await import("@/app/page");
-    const html = renderToStaticMarkup(await Home());
-    expect(html).toContain("https://claude.ai/customize/connectors");
-    expect(html).toContain("Add custom connector");
-    expect(html).toContain("Use Claude&#x27;s published identity");
-    expect(html).toContain("Organization settings → Connectors");
-    expect(html).not.toContain("Settings → Connectors → Add custom connector");
-  });
-
-  it("landing leads with the community disclaimer, the value and use cases", async () => {
+  it("landing is only the hero: headline, demo chips, chat and See how", async () => {
     const { default: Home } = await import("@/app/page");
     const html = renderToStaticMarkup(await Home());
     const disclaimer = html.indexOf("Community-built, not an official Edge City app");
     expect(disclaimer).toBeGreaterThan(-1);
     expect(disclaimer).toBeLessThan(html.indexOf("<h1"));
     expect(html).toContain("@HiiNaman");
-    expect(html).toContain("Use your own Claude or ChatGPT for Edge City events");
+    expect(html).toContain("Let your AI agents handle your Edge City events");
+    for (const t of ["Find events", "RSVP", "Create new events", "Confirm?", "Done ✓"])
+      expect(html).toContain(t);
+    expect(html).toMatch(/href="\/setup"[^>]*>See how/);
+    expect(html).toContain("/landing/beach-tall.webp");
+    expect(html).toContain("/landing/beach-wide.webp");
+    expect(html).not.toContain("<h2");
+  });
+
+  it("setup is a 3-step slide tutorial for Claude and ChatGPT", async () => {
+    const { default: Setup } = await import("@/app/setup/page");
+    const html = renderToStaticMarkup(await Setup());
+    expect(html).toContain("Set it up in 3 steps");
+    expect(html).toContain("your Claude can see Edge City events");
     for (const t of [
-      "See what&#x27;s on",
-      "RSVP without the portal",
-      "Plan your week",
-      "Host an event",
+      "Go to claude.ai → Customize → Connectors",
+      "Add a custom connector with this link",
+      "Add your Edge City key on the page that opens",
+      "You&#x27;re done",
+      "Go to ChatGPT → Plugins",
+      "Add a custom MCP server with this link",
     ])
       expect(html).toContain(t);
-    expect(html).toContain("Confirm?");
+    expect(html).toContain("Step 1 of 4");
+    expect(html).toContain("https://mcp.test/api/mcp");
+    expect(html).toContain("/portal/agentic-access");
+    expect(html).toContain("Never paste your key into a chat");
+    // detail is behind progressive disclosure
+    expect(html.split("More help").length - 1).toBeGreaterThanOrEqual(6);
+    expect(html).toContain("claude-add-custom-connector.png");
+    expect(html).toContain("I use another AI agent");
+    expect(html).toContain("Copy prompt");
+    expect(html).toContain("Read the setup guide: https://mcp.test/connect.md");
+    expect(html).toContain("claude mcp add --transport http eci-events");
+    expect(html).toContain("/connect.md");
     expect(html).toContain("What we track");
-    expect(html).toContain("how many people use this");
     expect(html).toContain("We never keep your key");
   });
 
-  it("landing offers two paths and chunks each step", async () => {
-    const { default: Home } = await import("@/app/page");
-    const html = renderToStaticMarkup(await Home());
-    expect(html).toContain("I know MCP servers →");
-    expect(html).toContain("I&#x27;m new to this, walk me through it");
-    expect(html).toContain("your Claude can see Edge City events");
-    for (const t of [
-      "Edge City events, inside Claude",
-      "Make your Edge City key",
-      "Open Customize → Connectors",
-      "Paste the name and link",
-      "Connect your key",
-      "Turn it on in a chat",
-      "Ask away",
-    ])
-      expect(html).toContain(t);
-    expect(html).toContain("Step 1 of 7");
-    // detail is behind progressive disclosure
-    expect(html.split("More help").length - 1).toBeGreaterThanOrEqual(8);
-    expect(html).toContain("claude-add-custom-connector.png");
-    expect(html).toContain("Add custom MCP server");
-    expect(html).toContain("claude mcp add --transport http eci-events");
-    expect(html).toContain("/connect.md");
+  it("claude.ai steps match the current Customize > Connectors flow", async () => {
+    const { default: Setup } = await import("@/app/setup/page");
+    const html = renderToStaticMarkup(await Setup());
+    expect(html).toContain("https://claude.ai/customize/connectors");
+    expect(html).toContain("Add custom connector");
+    expect(html).toContain("Use Claude&#x27;s published identity");
+    expect(html).toContain("Organization settings → Connectors");
+    expect(html).not.toContain("Settings → Connectors → Add custom connector");
   });
 
   it("trust page explains at four levels and links the key files", async () => {
@@ -89,11 +79,11 @@ describe("pages", () => {
     expect(html).toContain("Web pages");
     for (const e of [
       "landing_viewed",
+      "setup_viewed",
       "trust_viewed",
       "how_it_works_viewed",
       "connect_viewed",
       "client_tab_selected",
-      "setup_path_selected",
       "tutorial_step_viewed",
       "connect_started",
       "key_accepted",
