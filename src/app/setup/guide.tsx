@@ -200,7 +200,7 @@ function OtherAgent() {
         <h3 className="font-display text-2xl font-semibold">Let your agent figure it out</h3>
         <ol className="mt-3 list-decimal space-y-1 pl-5 text-lg text-neutral-700">
           <li>Copy this prompt.</li>
-          <li>Paste it into your agent: Cursor, Claude Code, Codex, Gemini, or any other.</li>
+          <li>Paste it into your agent: Gemini, Cursor, Windsurf, Perplexity, or any other.</li>
           <li>It reads our guide, looks up its own app, and adds the server or tells you how.</li>
         </ol>
         <div className="mt-5 rounded-xl border border-neutral-300 bg-neutral-50 p-4">
@@ -256,7 +256,7 @@ export function BeginnerGuide() {
         {
           id: "other",
           label: "I use another AI agent",
-          hint: "Cursor, Claude Code, Codex, Gemini…",
+          hint: "Gemini, Cursor, Perplexity…",
           content: <OtherAgent />,
         },
       ]}
