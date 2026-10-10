@@ -656,6 +656,33 @@ export const ROUTES: Record<string, RouteDoc> = {
       }
     ]
   },
+  "DELETE /events/portal/events/{event_id}": {
+    "method": "DELETE",
+    "path": "/events/portal/events/{event_id}",
+    "summary": "Delete Portal Event",
+    "scopes": [
+      "events:write"
+    ],
+    "query": [],
+    "body": []
+  },
+  "POST /events/portal/events/{event_id}/detach-occurrence": {
+    "method": "POST",
+    "path": "/events/portal/events/{event_id}/detach-occurrence",
+    "summary": "Detach Portal Occurrence",
+    "scopes": [
+      "events:write"
+    ],
+    "query": [],
+    "body": [
+      {
+        "name": "occurrence_start",
+        "required": true,
+        "type": "string",
+        "description": ""
+      }
+    ]
+  },
   "GET /events/portal/events/{event_id}/admin-notes": {
     "method": "GET",
     "path": "/events/portal/events/{event_id}/admin-notes",
