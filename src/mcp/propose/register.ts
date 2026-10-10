@@ -46,7 +46,7 @@ Times you send must carry an offset, e.g. 2026-10-14T18:30:00+05:30.`;
 const keyHash = (key: string) => createHash("sha256").update(key).digest("hex").slice(0, 32);
 
 export const STEERING =
-  "Show the attendee the summary above, word for word, and raise each warning. Call `edgeos_confirm` only after they explicitly say yes. If they change anything, call `edgeos_propose` again with the new details. Call edgeos_confirm once per proposal; a repeated confirm repeats the change.";
+  "Show the attendee the summary above, word for word, and raise each warning. For each warning, say what it means for them and what they could change instead. Call `edgeos_confirm` only after they explicitly say yes. If they change anything, call `edgeos_propose` again with the new details. Call edgeos_confirm once per proposal; a repeated confirm repeats the change.";
 
 export function registerProposeTools(
   server: McpServer,
