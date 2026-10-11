@@ -3,6 +3,16 @@ export type ParamDoc = { name: string; required: boolean; type: string; descript
 export type RouteDoc = { method: string; path: string; summary: string; scopes: string[]; query: ParamDoc[]; body: ParamDoc[] };
 export const SPEC_VERSION = "0.1.0";
 export const ROUTES: Record<string, RouteDoc> = {
+  "GET /popups/portal/{slug}/apps/{app_id}/launch": {
+    "method": "GET",
+    "path": "/popups/portal/{slug}/apps/{app_id}/launch",
+    "summary": "Get Sso Launch",
+    "scopes": [
+      "events:read"
+    ],
+    "query": [],
+    "body": []
+  },
   "GET /popups/portal/list": {
     "method": "GET",
     "path": "/popups/portal/list",
@@ -652,6 +662,33 @@ export const ROUTES: Record<string, RouteDoc> = {
         "name": "group_id",
         "required": false,
         "type": "string | null",
+        "description": ""
+      }
+    ]
+  },
+  "DELETE /events/portal/events/{event_id}": {
+    "method": "DELETE",
+    "path": "/events/portal/events/{event_id}",
+    "summary": "Delete Portal Event",
+    "scopes": [
+      "events:write"
+    ],
+    "query": [],
+    "body": []
+  },
+  "POST /events/portal/events/{event_id}/detach-occurrence": {
+    "method": "POST",
+    "path": "/events/portal/events/{event_id}/detach-occurrence",
+    "summary": "Detach Portal Occurrence",
+    "scopes": [
+      "events:write"
+    ],
+    "query": [],
+    "body": [
+      {
+        "name": "occurrence_start",
+        "required": true,
+        "type": "string",
         "description": ""
       }
     ]

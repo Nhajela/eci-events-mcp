@@ -5,6 +5,63 @@
     "version": "0.1.0"
   },
   "paths": {
+    "/api/v1/popups/portal/{slug}/apps/{app_id}/launch": {
+      "get": {
+        "tags": [
+          "third-party-sso"
+        ],
+        "summary": "Get Sso Launch",
+        "operationId": "third-party-sso-get_sso_launch",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Slug"
+            }
+          },
+          {
+            "name": "app_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "App Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SSOLaunchPublic"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/popups/portal/list": {
       "get": {
         "tags": [
@@ -1131,6 +1188,105 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/EventUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EventPublic"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "events"
+        ],
+        "summary": "Delete Portal Event",
+        "description": "Permanently delete an event (the whole series for a recurring master).\n\nOwner only: unlike edit/cancel, the host and collaborators can't delete,\nsince it's irreversible. Never on an ended popup. Mirrors the admin\n``DELETE /events/{id}``.",
+        "operationId": "events-delete_portal_event",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/events/portal/events/{event_id}/detach-occurrence": {
+      "post": {
+        "tags": [
+          "events"
+        ],
+        "summary": "Detach Portal Occurrence",
+        "description": "Materialize one managed recurring occurrence for an isolated edit.",
+        "operationId": "events-detach_portal_occurrence",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "event_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Event Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OccurrenceRef"
               }
             }
           }
@@ -3335,6 +3491,13 @@
             "format": "uuid",
             "title": "Id"
           },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Warnings"
+          },
           "occurrence_id": {
             "anyOf": [
               {
@@ -4489,6 +4652,21 @@
         ],
         "title": "ListModel[TrackPublic]"
       },
+      "OccurrenceRef": {
+        "properties": {
+          "occurrence_start": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Occurrence Start"
+          }
+        },
+        "type": "object",
+        "required": [
+          "occurrence_start"
+        ],
+        "title": "OccurrenceRef",
+        "description": "Body referencing a specific instance of a recurring series."
+      },
       "Paging": {
         "properties": {
           "limit": {
@@ -4804,6 +4982,18 @@
             ],
             "title": "Theme Config"
           },
+          "sidebar_config": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sidebar Config"
+          },
           "favicon_url": {
             "anyOf": [
               {
@@ -4903,6 +5093,11 @@
           "show_attendee_directory": {
             "type": "boolean",
             "title": "Show Attendee Directory",
+            "default": false
+          },
+          "badges_enabled": {
+            "type": "boolean",
+            "title": "Badges Enabled",
             "default": false
           },
           "edit_passes_enabled": {
@@ -5137,6 +5332,24 @@
           "allowed"
         ],
         "title": "RsvpEligibility"
+      },
+      "SSOLaunchPublic": {
+        "properties": {
+          "app_name": {
+            "type": "string",
+            "title": "App Name"
+          },
+          "start_url": {
+            "type": "string",
+            "title": "Start Url"
+          }
+        },
+        "type": "object",
+        "required": [
+          "app_name",
+          "start_url"
+        ],
+        "title": "SSOLaunchPublic"
       },
       "SaleType": {
         "type": "string",
