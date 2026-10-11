@@ -12,13 +12,13 @@ export const PROMPTS = [
     name: "plan_my_week",
     title: "Plan my week",
     description: "Build a week plan from the calendar and your RSVPs.",
-    text: "Call edgeos_initialize. Show my RSVPs for the next 7 days (edgeos_list_events with mine: true), then ask what I'm interested in and suggest events that fit around them without clashes. RSVP only through edgeos_propose and edgeos_confirm, one at a time, after I say yes.",
+    text: "Call edgeos_initialize. Show my RSVPs for the next 7 days (edgeos_list_events with mine: true), then ask what I'm interested in and suggest events that fit around them without clashes, saying why each one fits. If two good events clash, show me both and the trade-off. RSVP only through edgeos_propose and edgeos_confirm, one at a time, after I say yes.",
   },
   {
     name: "host_an_event",
     title: "Host an event",
     description: "Plan and create an event, checked before it goes live.",
-    text: "Call edgeos_initialize and edgeos_guide with topic hosting. Ask me, one question at a time, for the title, what happens, when (IST), where (show me free venues with edgeos_venue_availability), and capacity. Then use edgeos_propose with action create_event, show me the summary and warnings, and confirm only after I say yes.",
+    text: "Call edgeos_initialize and edgeos_guide with topic hosting. Ask me, one question at a time, for the title, what happens, when (IST), where (show me free venues with edgeos_venue_availability), and capacity. When you suggest a venue, time or capacity, say why. If I ask for something this server can't do (like a repeating event), tell me and give me the options with what each means later. Then use edgeos_propose with action create_event, show me the summary and warnings, and confirm only after I say yes.",
   },
 ] as const;
 

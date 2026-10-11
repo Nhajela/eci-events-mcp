@@ -7,6 +7,7 @@ patch for fixes, minor for new tools or pages, major for changes that make atten
 ## [Unreleased]
 
 ### Changed
+- The AI now explains its recommendations and, when there's a choice (especially something this server can't do, like repeating events), lays out the options with what each means later and lets the attendee pick. Added to the server instructions, `edgeos_initialize`, the hosting, recurring, RSVP and limits guides, the prompts and the proposal next steps.
 - Landing page is now one hero: "Let your AI agents handle your Edge City events" over a Goa beach illustration, with a live example chat you switch between find, RSVP and create. "See how" opens /setup, a slide tutorial in 3 steps (Customize → Connectors, add the link, add your key) for Claude and ChatGPT, plus a copyable prompt that lets any other AI agent work out its own setup.
 - Landing page redesigned for clarity: one message per block, the two setup paths in the hero, one action per tutorial slide with a goal and progress bar, and details behind "More help".
 

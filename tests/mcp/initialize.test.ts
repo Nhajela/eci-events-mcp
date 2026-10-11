@@ -16,6 +16,12 @@ describe("edgeos_initialize", () => {
     expect(text).toContain("edgeos_list_events");
   });
 
+  it("tells the AI to explain recommendations and offer options with trade-offs", () => {
+    const text = buildInitialize(TEST_ACCESS, NOW, []);
+    expect(text).toContain("## Guiding the attendee");
+    expect(text).toContain("15 separate events");
+  });
+
   it("lists what EdgeOS doesn't offer", () => {
     expect(buildInitialize(TEST_ACCESS, NOW, [])).toContain("attendee directory");
   });
